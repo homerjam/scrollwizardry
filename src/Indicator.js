@@ -135,8 +135,8 @@ class Indicator {
     }
 
     // add listeners for updates
-    this.scene.on('change.plugin_addIndicators', this._handleTriggerParamsChange);
-    this.scene.on('shift.plugin_addIndicators', this._handleBoundsParamsChange);
+    this.scene.on('change.plugin_addIndicators', this._handleTriggerParamsChange.bind(this));
+    this.scene.on('shift.plugin_addIndicators', this._handleBoundsParamsChange.bind(this));
 
     // updates trigger & bounds (will add elements if needed)
     this._updateTriggerGroup();
@@ -159,8 +159,8 @@ class Indicator {
         // just remove from memberlist of old group
         const group = this.triggerGroup;
         group.members.splice(group.members.indexOf(this), 1);
-        this._ctrl._indicators.updateTriggerGroupLabel(group);
-        this._ctrl._indicators.updateTriggerGroupPositions(group);
+        this._ctrl.updateTriggerGroupLabel(group);
+        this._ctrl.updateTriggerGroupPositions(group);
         this.triggerGroup = undefined;
       } else {
         // remove complete group
@@ -287,15 +287,15 @@ class Indicator {
             this._removeTriggerGroup();
           } else {
             this.triggerGroup.members.splice(this.triggerGroup.members.indexOf(this), 1); // just remove from memberlist of old group
-            this._ctrl._indicators.updateTriggerGroupLabel(this.triggerGroup);
-            this._ctrl._indicators.updateTriggerGroupPositions(this.triggerGroup);
+            this._ctrl.updateTriggerGroupLabel(this.triggerGroup);
+            this._ctrl.updateTriggerGroupPositions(this.triggerGroup);
             // _util.log(0, "trigger", options.name, "->", "removing from previous member list");
           }
         }
         // join new group
         group.members.push(this);
         this.triggerGroup = group;
-        this._ctrl._indicators.updateTriggerGroupLabel(group);
+        this._ctrl.updateTriggerGroupLabel(group);
         return;
       }
     }
@@ -306,13 +306,13 @@ class Indicator {
         // _util.log(0, "trigger", options.name, "->", "updating existing");
         // out of sync but i'm the only member => just change and update
         this.triggerGroup.triggerHook = triggerHook;
-        this._ctrl._indicators.updateTriggerGroupPositions(this.triggerGroup);
+        this._ctrl.updateTriggerGroupPositions(this.triggerGroup);
         return;
       }
       // _util.log(0, "trigger", options.name, "->", "removing from previous member list");
       this.triggerGroup.members.splice(this.triggerGroup.members.indexOf(this), 1); // just remove from memberlist of old group
-      this._ctrl._indicators.updateTriggerGroupLabel(this.triggerGroup);
-      this._ctrl._indicators.updateTriggerGroupPositions(this.triggerGroup);
+      this._ctrl.updateTriggerGroupLabel(this.triggerGroup);
+      this._ctrl.updateTriggerGroupPositions(this.triggerGroup);
       this.triggerGroup = undefined; // need a brand new group...
     }
     // _util.log(0, "trigger", options.name, "->", "add a new one");

@@ -1,5 +1,7 @@
 /* eslint-env browser */
 
+const DEBUG = false;
+
 const U = {};
 
 let i;
@@ -126,6 +128,9 @@ for (i = 0; i < loglevels.length; i++) {
 }
 
 U.log = function (loglevel) {
+  if (!DEBUG) {
+    return;
+  }
   if (loglevel > loglevels.length || loglevel <= 0) loglevel = loglevels.length;
   const now = new Date();
   const time = `${(`0${now.getHours()}`).slice(-2)}:${(`0${now.getMinutes()}`).slice(-2)}:${(`0${now.getSeconds()}`).slice(-2)}:${(`00${now.getMilliseconds()}`).slice(-3)}`;

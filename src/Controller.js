@@ -13,32 +13,18 @@ const SCROLL_DIRECTION_PAUSED = 'PAUSED';
 
 const EDGE_OFFSET = 15; // minimum edge distance, added to indentation
 
-let _sceneObjects = [];
-let _updateScenesOnNextCycle = false;
-let _scrollPos = 0;
-let _scrollDirection = SCROLL_DIRECTION_PAUSED;
-let _isDocument = true;
-let _viewPortSize = 0;
-let _enabled = true;
-let _updateTimeout;
-let _refreshTimeout;
-
-const CONTROLLER_OPTIONS = {
-  defaults: {
-    container: window,
-    vertical: true,
-    globalSceneOptions: {},
-    loglevel: 2,
-    refreshInterval: 100,
-    addIndicators: false,
-  },
+const DEFAULT_CONTROLLER_OPTIONS = {
+  container: window,
+  vertical: true,
+  globalSceneOptions: {},
+  loglevel: 2,
+  refreshInterval: 100,
+  addIndicators: false,
 };
-
-const DEFAULT_OPTIONS = CONTROLLER_OPTIONS.defaults;
 
 class Controller {
   constructor(options) {
-    this.options = _util.extend({}, DEFAULT_OPTIONS, options);
+    this.options = _util.extend({}, DEFAULT_CONTROLLER_OPTIONS, options);
 
     this.options.container = _util.get.elements(this.options.container)[0];
 
@@ -48,26 +34,30 @@ class Controller {
       throw Error(`${NAMESPACE} init failed.`); // cancel
     }
 
-    _isDocument = this.options.container === window || this.options.container === document.body || !document.body.contains(this.options.container);
+    this._isDocument = this.options.container === window || this.options.container === document.body || !document.body.contains(this.options.container);
+    this._sceneObjects = [];
+    this._updateScenesOnNextCycle = false;
+    this._scrollPos = 0;
+    this._scrollDirection = SCROLL_DIRECTION_PAUSED;
+    this._viewPortSize = 0;
+    this._enabled = true;
+    this._updateTimeout = null;
+    this._refreshTimeout = null;
 
     // normalize to window
-    if (_isDocument) {
+    if (this._isDocument) {
       this.options.container = window;
     }
 
     // update container size immediately
-    _viewPortSize = this._getViewportSize();
+    this._viewPortSize = this._getViewportSize();
 
     // set event handlers
-    this.options.container.addEventListener('resize', (event) => {
-      this._onChange(event);
-    });
-    this.options.container.addEventListener('scroll', (event) => {
-      this._onChange(event);
-    });
+    this.options.container.addEventListener('resize', this._onChange.bind(this));
+    this.options.container.addEventListener('scroll', this._onChange.bind(this));
 
     const ri = parseInt(this.options.refreshInterval, 10);
-    this.options.refreshInterval = _util.type.Number(ri) ? ri : DEFAULT_OPTIONS.refreshInterval;
+    this.options.refreshInterval = _util.type.Number(ri) ? ri : DEFAULT_CONTROLLER_OPTIONS.refreshInterval;
     this._scheduleRefresh();
 
     // indicators
@@ -95,9 +85,7 @@ class Controller {
 
   _scheduleRefresh() {
     if (this.options.refreshInterval > 0) {
-      _refreshTimeout = window.setTimeout(() => {
-        this._refresh();
-      }, this.options.refreshInterval);
+      this._refreshTimeout = window.setTimeout(this._refresh.bind(this), this.options.refreshInterval);
     }
   }
 
@@ -111,12 +99,12 @@ class Controller {
 
   _setScrollPos(pos) {
     if (this.options.vertical) {
-      if (_isDocument) {
+      if (this._isDocument) {
         window.scrollTo(_util.get.scrollLeft(), pos);
       } else {
         this.options.container.scrollTop = pos;
       }
-    } else if (_isDocument) {
+    } else if (this._isDocument) {
       window.scrollTo(pos, _util.get.scrollTop());
     } else {
       this.options.container.scrollLeft = pos;
@@ -124,32 +112,32 @@ class Controller {
   }
 
   _updateScenes() {
-    if (_enabled && _updateScenesOnNextCycle) {
+    if (this._enabled && this._updateScenesOnNextCycle) {
       // determine scenes to update
-      const scenesToUpdate = _util.type.Array(_updateScenesOnNextCycle) ? _updateScenesOnNextCycle : _sceneObjects.slice(0);
+      const scenesToUpdate = _util.type.Array(this._updateScenesOnNextCycle) ? this._updateScenesOnNextCycle : this._sceneObjects.slice(0);
 
       // reset scenes
-      _updateScenesOnNextCycle = false;
+      this._updateScenesOnNextCycle = false;
 
-      const oldScrollPos = _scrollPos;
+      const oldScrollPos = this._scrollPos;
 
       // update scroll pos now instead of on change, as it might have changed since scheduling (i.e. in-browser smooth scroll)
-      _scrollPos = this.scrollPos();
+      this._scrollPos = this.scrollPos();
 
-      const deltaScroll = _scrollPos - oldScrollPos;
+      const deltaScroll = this._scrollPos - oldScrollPos;
 
       if (deltaScroll !== 0) { // scroll position changed?
-        _scrollDirection = (deltaScroll > 0) ? SCROLL_DIRECTION_FORWARD : SCROLL_DIRECTION_REVERSE;
+        this._scrollDirection = (deltaScroll > 0) ? SCROLL_DIRECTION_FORWARD : SCROLL_DIRECTION_REVERSE;
       }
 
       // reverse order of scenes if scrolling reverse
-      if (_scrollDirection === SCROLL_DIRECTION_REVERSE) {
+      if (this._scrollDirection === SCROLL_DIRECTION_REVERSE) {
         scenesToUpdate.reverse();
       }
 
       // update scenes
       scenesToUpdate.forEach((scene, index) => {
-        _util.log(3, `updating scene ${index + 1}/${scenesToUpdate.length} (${_sceneObjects.length} total)`);
+        _util.log(3, `updating scene ${index + 1}/${scenesToUpdate.length} (${this._sceneObjects.length} total)`);
         scene.update(true);
       });
 
@@ -160,29 +148,27 @@ class Controller {
   }
 
   _debounceUpdate() {
-    _updateTimeout = _util.rAF(() => {
-      this._updateScenes();
-    });
+    this._updateTimeout = _util.rAF(this._updateScenes.bind(this));
   }
 
   _onChange(event) {
     _util.log(3, 'event fired causing an update:', event.type);
     if (event.type === 'resize') {
       // resize
-      _viewPortSize = this._getViewportSize();
-      _scrollDirection = SCROLL_DIRECTION_PAUSED;
+      this._viewPortSize = this._getViewportSize();
+      this._scrollDirection = SCROLL_DIRECTION_PAUSED;
     }
     // schedule update
-    if (_updateScenesOnNextCycle !== true) {
-      _updateScenesOnNextCycle = true;
+    if (this._updateScenesOnNextCycle !== true) {
+      this._updateScenesOnNextCycle = true;
       this._debounceUpdate();
     }
   }
 
   _refresh() {
-    if (!_isDocument) {
+    if (!this._isDocument) {
       // simulate resize event, only works for viewport relevant param (performance)
-      if (_viewPortSize !== this._getViewportSize()) {
+      if (this._viewPortSize !== this._getViewportSize()) {
         let resizeEvent;
         try {
           resizeEvent = new Event('resize', { bubbles: false, cancelable: false });
@@ -195,18 +181,18 @@ class Controller {
     }
 
     // refresh all scenes
-    _sceneObjects.forEach((scene, index) => {
+    this._sceneObjects.forEach((scene, index) => {
       scene.refresh();
     });
 
     this._scheduleRefresh();
   }
 
-  _sortScenes(ScenesArray) {
-    if (ScenesArray.length <= 1) {
-      return ScenesArray;
+  _sortScenes(scenesArray) {
+    if (scenesArray.length <= 1) {
+      return scenesArray;
     }
-    const scenes = ScenesArray.slice(0);
+    const scenes = scenesArray.slice(0);
     scenes.sort((a, b) => (a.scrollOffset() > b.scrollOffset() ? 1 : -1));
     return scenes;
   }
@@ -218,12 +204,12 @@ class Controller {
       });
     } else if (newScene.controller() !== this) {
       newScene.addTo(this);
-    } else if (_sceneObjects.indexOf(newScene) < 0) {
+    } else if (this._sceneObjects.indexOf(newScene) < 0) {
       // new scene
-      _sceneObjects.push(newScene); // add to array
-      _sceneObjects = this._sortScenes(_sceneObjects); // sort
+      this._sceneObjects.push(newScene); // add to array
+      this._sceneObjects = this._sortScenes(this._sceneObjects); // sort
       newScene.on('shift.controller_sort', () => { // resort whenever scene moves
-        _sceneObjects = this._sortScenes(_sceneObjects);
+        this._sceneObjects = this._sortScenes(this._sceneObjects);
       });
       // insert global defaults.
       for (const key in this.options.globalSceneOptions) {
@@ -231,7 +217,7 @@ class Controller {
           newScene[key].call(newScene, this.options.globalSceneOptions[key]);
         }
       }
-      _util.log(3, `adding Scene (now ${_sceneObjects.length} total)`);
+      _util.log(3, `adding Scene (now ${this._sceneObjects.length} total)`);
     }
 
     // indicators
@@ -251,11 +237,11 @@ class Controller {
         this.removeScene(_scene);
       });
     } else {
-      const index = _sceneObjects.indexOf(scene);
+      const index = this._sceneObjects.indexOf(scene);
       if (index > -1) {
         scene.off('shift.controller_sort');
-        _sceneObjects.splice(index, 1);
-        _util.log(3, `removing Scene (now ${_sceneObjects.length} left)`);
+        this._sceneObjects.splice(index, 1);
+        _util.log(3, `removing Scene (now ${this._sceneObjects.length} left)`);
         scene.remove();
       }
     }
@@ -270,14 +256,14 @@ class Controller {
     } else if (immediately) {
       scene.update(true);
 
-    // if _updateScenesOnNextCycle is true, all connected scenes are already scheduled for update
-    } else if (_updateScenesOnNextCycle !== true) {
+    // if this._updateScenesOnNextCycle is true, all connected scenes are already scheduled for update
+    } else if (this._updateScenesOnNextCycle !== true) {
       // prep array for next update cycle
-      _updateScenesOnNextCycle = _updateScenesOnNextCycle || [];
-      if (_updateScenesOnNextCycle.indexOf(scene) === -1) {
-        _updateScenesOnNextCycle.push(scene);
+      this._updateScenesOnNextCycle = this._updateScenesOnNextCycle || [];
+      if (this._updateScenesOnNextCycle.indexOf(scene) === -1) {
+        this._updateScenesOnNextCycle.push(scene);
       }
-      _updateScenesOnNextCycle = this._sortScenes(_updateScenesOnNextCycle); // sort
+      this._updateScenesOnNextCycle = this._sortScenes(this._updateScenesOnNextCycle); // sort
       this._debounceUpdate();
     }
     return this;
@@ -312,7 +298,7 @@ class Controller {
 
         const elementOffset = _util.get.offset(elem);
 
-        if (!_isDocument) { // container is not the document root, so substract scroll Position to get correct trigger element position relative to scrollcontent
+        if (!this._isDocument) { // container is not the document root, so substract scroll Position to get correct trigger element position relative to scrollcontent
           containerOffset[param] -= this.scrollPos();
         }
 
@@ -320,7 +306,7 @@ class Controller {
       } else {
         _util.log(2, 'scrollTo(): The supplied argument is invalid. Scroll cancelled.', scrollTarget);
       }
-    } else { // scroll to scene
+    } else if (scrollTarget instanceof Scene) { // scroll to scene
       if (scrollTarget.controller() === this) { // check if the controller is associated with this scene
         this.scrollTo(scrollTarget.scrollOffset(), additionalParameter);
       } else {
@@ -345,12 +331,12 @@ class Controller {
 
   info(about) {
     const values = {
-      size: _viewPortSize, // contains height or width (in regard to orientation)
+      size: this._viewPortSize, // contains height or width (in regard to orientation)
       vertical: this.options.vertical,
-      scrollPos: _scrollPos,
-      scrollDirection: _scrollDirection,
+      scrollPos: this._scrollPos,
+      scrollDirection: this._scrollDirection,
       container: this.options.container,
-      isDocument: _isDocument,
+      isDocument: this._isDocument,
     };
     if (values[about]) {
       return values[about];
@@ -369,31 +355,27 @@ class Controller {
 
   enabled(newState) {
     if (!arguments.length) { // get
-      return _enabled;
-    } else if (_enabled !== newState) { // set
-      _enabled = !!newState;
-      this.updateScene(_sceneObjects, true);
+      return this._enabled;
+    } else if (this._enabled !== newState) { // set
+      this._enabled = !!newState;
+      this.updateScene(this._sceneObjects, true);
     }
     return this;
   }
 
   destroy(resetScenes) {
-    window.clearTimeout(_refreshTimeout);
+    window.clearTimeout(this._refreshTimeout);
 
-    let i = _sceneObjects.length;
+    let i = this._sceneObjects.length;
 
     while (i--) {
-      _sceneObjects[i].destroy(resetScenes);
+      this._sceneObjects[i].destroy(resetScenes);
     }
 
-    this.options.container.removeEventListener('resize', (event) => {
-      this._onChange(event);
-    });
-    this.options.container.removeEventListener('scroll', (event) => {
-      this._onChange(event);
-    });
+    this.options.container.removeEventListener('resize', this._onChange.bind(this));
+    this.options.container.removeEventListener('scroll', this._onChange.bind(this));
 
-    _util.cAF(_updateTimeout);
+    _util.cAF(this._updateTimeout);
 
     _util.log(3, `destroyed ${NAMESPACE} (reset: ${resetScenes ? 'true' : 'false'})`);
 
