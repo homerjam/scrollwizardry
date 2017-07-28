@@ -27,9 +27,6 @@ U.type = _type;
    * ------------------------------
    */
 
-// parse float and fall back to 0.
-const _floatval = number => parseFloat(number) || 0;
-
 // get current style IE safe (otherwise IE would return calculated values for 'auto')
 const _getComputedStyle = elem => (elem.currentStyle ? elem.currentStyle : window.getComputedStyle(elem));
 
@@ -45,7 +42,7 @@ const _dimension = (which, elem, outer, includeMargin) => {
   let dimension = (outer ? elem[`offset${which}`] || elem[`outer${which}`] : elem[`client${which}`] || elem[`inner${which}`]) || 0;
   if (outer && includeMargin) {
     const style = _getComputedStyle(elem);
-    dimension += which === 'Height' ? _floatval(style.marginTop) + _floatval(style.marginBottom) : _floatval(style.marginLeft) + _floatval(style.marginRight);
+    dimension += which === 'Height' ? U.floatVal(style.marginTop) + U.floatVal(style.marginBottom) : U.floatVal(style.marginLeft) + U.floatVal(style.marginRight);
   }
   return dimension;
 };
@@ -58,6 +55,9 @@ const _camelCase = str => str.replace(/^[^a-z]+([a-z])/g, '$1').replace(/-([a-z]
    * External helpers
    * ------------------------------
    */
+
+// parse float and fall back to 0.
+U.floatVal = number => parseFloat(number) || 0;
 
 // extend obj – same as jQuery.extend({}, objA, objB)
 U.extend = function (obj) {

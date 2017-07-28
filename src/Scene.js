@@ -92,6 +92,9 @@ class Scene {
         return val;
       },
       offset(val) {
+        if (_util.type.Function(val)) {
+          val = val();
+        }
         val = parseFloat(val);
         if (!_util.type.Number(val)) {
           throw Error(`Invalid value for option "offset": ${val}`);
@@ -402,7 +405,8 @@ class Scene {
   }
 
   _updateScrollOffset() {
-    this._scrollOffset = { start: this._triggerPos + this.options.offset };
+    const offset = _util.type.Function(this.options.offset) ? this.options.offset() : this.options.offset;
+    this._scrollOffset = { start: this._triggerPos + offset };
     if (this._controller && this.options.triggerElement) {
       // take away triggerHook portion to get relative to top
       this._scrollOffset.start -= this._controller.info('size') * this.options.triggerHook;
@@ -532,18 +536,19 @@ class Scene {
   }
 
   triggerPosition() {
-    let pos = this.options.offset; // the offset is the basis
+    // the offset is the basis
+    let offset = _util.type.Function(this.options.offset) ? this.options.offset() : this.options.offset;
     if (this._controller) {
       // get the trigger position
       if (this.options.triggerElement) {
         // Element as trigger
-        pos += this._triggerPos;
+        offset += this._triggerPos;
       } else {
         // return the height of the triggerHook to start at the beginning
-        pos += this._controller.info('size') * this.triggerHook();
+        offset += this._controller.info('size') * this.triggerHook();
       }
     }
-    return pos;
+    return offset;
   }
 
   // pinning

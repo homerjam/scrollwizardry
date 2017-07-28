@@ -404,6 +404,12 @@ class Controller {
   // event handler for when associated trigger groups need to be repositioned
   _handleTriggerPositionChange() {
     this.updateTriggerGroupPositions();
+
+    this._sceneObjects.forEach((scene, index) => {
+      if (scene._indicator) {
+        scene._indicator._updateBounds();
+      }
+    });
   }
 
   // updates the position of the bounds container to aligned to the right for vertical containers and to the bottom for horizontal
