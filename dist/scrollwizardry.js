@@ -859,7 +859,6 @@ var Scene = function () {
     });
 
     this.on('shift.internal', function (event) {
-      _this2._updateScrollOffset();
       _this2.update(); // update scene to reflect new position
     });
 
@@ -1035,6 +1034,7 @@ var Scene = function () {
     key: 'update',
     value: function update(immediately) {
       if (this._controller) {
+        this._updateScrollOffset();
         if (immediately) {
           if (this._controller.enabled()) {
             var scrollPos = this._controller.info('scrollPos');
