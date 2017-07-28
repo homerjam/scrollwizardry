@@ -53,8 +53,8 @@ class Controller {
     this._viewPortSize = this._getViewportSize();
 
     // set event handlers
-    this.options.container.addEventListener('resize', this._onChange.bind(this));
-    this.options.container.addEventListener('scroll', this._onChange.bind(this));
+    this.options.container.addEventListener('resize', this._onChange.bind(this), { passive: true });
+    this.options.container.addEventListener('scroll', this._onChange.bind(this), { passive: true });
 
     const ri = parseInt(this.options.refreshInterval, 10);
     this.options.refreshInterval = _util.type.Number(ri) ? ri : DEFAULT_CONTROLLER_OPTIONS.refreshInterval;
@@ -70,14 +70,14 @@ class Controller {
     };
 
     if (this.options.addIndicators) {
-      this._container.addEventListener('resize', this._handleTriggerPositionChange.bind(this));
+      this._container.addEventListener('resize', this._handleTriggerPositionChange.bind(this), { passive: true });
       if (!this._isDocument) {
-        window.addEventListener('resize', this._handleTriggerPositionChange.bind(this));
-        window.addEventListener('scroll', this._handleTriggerPositionChange.bind(this));
+        window.addEventListener('resize', this._handleTriggerPositionChange.bind(this), { passive: true });
+        window.addEventListener('scroll', this._handleTriggerPositionChange.bind(this), { passive: true });
       }
       // update all related bounds containers
-      this._container.addEventListener('resize', this._handleBoundsPositionChange.bind(this));
-      this._container.addEventListener('scroll', this._handleBoundsPositionChange.bind(this));
+      this._container.addEventListener('resize', this._handleBoundsPositionChange.bind(this), { passive: true });
+      this._container.addEventListener('scroll', this._handleBoundsPositionChange.bind(this), { passive: true });
     }
 
     _util.log(3, `added new ${NAMESPACE}`);
@@ -372,8 +372,8 @@ class Controller {
       this._sceneObjects[i].destroy(resetScenes);
     }
 
-    this.options.container.removeEventListener('resize', this._onChange.bind(this));
-    this.options.container.removeEventListener('scroll', this._onChange.bind(this));
+    this.options.container.removeEventListener('resize', this._onChange.bind(this), { passive: true });
+    this.options.container.removeEventListener('scroll', this._onChange.bind(this), { passive: true });
 
     _util.cAF(this._updateTimeout);
 
@@ -382,13 +382,13 @@ class Controller {
     // indicators
 
     if (this.options.addIndicators) {
-      this._container.removeEventListener('resize', this._handleTriggerPositionChange.bind(this));
+      this._container.removeEventListener('resize', this._handleTriggerPositionChange.bind(this), { passive: true });
       if (!this._isDocument) {
-        window.removeEventListener('resize', this._handleTriggerPositionChange.bind(this));
-        window.removeEventListener('scroll', this._handleTriggerPositionChange.bind(this));
+        window.removeEventListener('resize', this._handleTriggerPositionChange.bind(this), { passive: true });
+        window.removeEventListener('scroll', this._handleTriggerPositionChange.bind(this), { passive: true });
       }
-      this._container.removeEventListener('resize', this._handleBoundsPositionChange.bind(this));
-      this._container.removeEventListener('scroll', this._handleBoundsPositionChange.bind(this));
+      this._container.removeEventListener('resize', this._handleBoundsPositionChange.bind(this), { passive: true });
+      this._container.removeEventListener('scroll', this._handleBoundsPositionChange.bind(this), { passive: true });
     }
 
     return null;

@@ -113,7 +113,7 @@ class Indicator {
     // set public variables
     this.options = options;
     this.bounds = this._elemBounds;
-    this.triggerGroup = undefined; // will be set later
+    this.triggerGroup = null; // will be set later
 
     this.scene = scene;
   }
@@ -161,7 +161,7 @@ class Indicator {
         group.members.splice(group.members.indexOf(this), 1);
         this._ctrl.updateTriggerGroupLabel(group);
         this._ctrl.updateTriggerGroupPositions(group);
-        this.triggerGroup = undefined;
+        this.triggerGroup = null;
       } else {
         // remove complete group
         this._removeTriggerGroup();
@@ -253,7 +253,7 @@ class Indicator {
   _removeTriggerGroup() {
     this._ctrl._indicators.groups.splice(this._ctrl._indicators.groups.indexOf(this.triggerGroup), 1);
     this.triggerGroup.element.parentNode.removeChild(this.triggerGroup.element);
-    this.triggerGroup = undefined;
+    this.triggerGroup = null;
   }
 
   // updates the trigger group -> either join existing or add new one
@@ -313,7 +313,7 @@ class Indicator {
       this.triggerGroup.members.splice(this.triggerGroup.members.indexOf(this), 1); // just remove from memberlist of old group
       this._ctrl.updateTriggerGroupLabel(this.triggerGroup);
       this._ctrl.updateTriggerGroupPositions(this.triggerGroup);
-      this.triggerGroup = undefined; // need a brand new group...
+      this.triggerGroup = null; // need a brand new group...
     }
     // _util.log(0, "trigger", options.name, "->", "add a new one");
     // did not find any match, make new trigger group

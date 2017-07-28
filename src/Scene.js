@@ -83,7 +83,7 @@ class Scene {
         val = parseFloat(val);
         if (!_util.type.Number(val) || val < 0) {
           if (this._durationUpdateMethod) {
-            this._durationUpdateMethod = undefined;
+            this._durationUpdateMethod = null;
             throw Error(`Invalid return value of supplied function for option "duration": ${val}`);
           } else {
             throw Error(`Invalid value for option "duration": ${val}`);
@@ -278,7 +278,7 @@ class Scene {
       this._updateDuration(true);
       this._updateTriggerElementPosition(true);
       this._updateScrollOffset();
-      this._controller.info('container').addEventListener('resize', this._onContainerResize.bind(this));
+      this._controller.info('container').addEventListener('resize', this._onContainerResize.bind(this), { passive: true });
       controller.addScene(this);
       this.trigger('add', { controller: this._controller });
       _util.log(3, `added ${NAMESPACE} to controller`);
@@ -289,9 +289,9 @@ class Scene {
 
   remove() {
     if (this._controller) {
-      this._controller.info('container').removeEventListener('resize', this._onContainerResize.bind(this));
+      this._controller.info('container').removeEventListener('resize', this._onContainerResize.bind(this), { passive: true });
       const tmpParent = this._controller;
-      this._controller = undefined;
+      this._controller = null;
       tmpParent.removeScene(this);
       this.trigger('remove');
       _util.log(3, `removed ${NAMESPACE} from controller`);
@@ -302,6 +302,7 @@ class Scene {
   destroy(reset) {
     this.trigger('destroy', { reset });
     this.remove();
+    this.triggerElement(null);
     this.off('*.*');
     _util.log(3, `destroyed ${NAMESPACE} (reset: ${reset ? 'true' : 'false'})`);
     return null;
@@ -504,7 +505,7 @@ class Scene {
           return this.options[optionName];
         }
         if (optionName === 'duration') { // new duration is set, so any previously set function must be unset
-          this._durationUpdateMethod = undefined;
+          this._durationUpdateMethod = null;
         }
         if (this._changeOption(optionName, args[0])) { // set
           this.trigger('change', { what: optionName, newVal: this.options[optionName] });
@@ -603,7 +604,9 @@ class Scene {
   }
 
   _updatePinDimensions() {
-    if (this._pin && this._controller && this._pinOptions.inFlow) { // no spacerresize, if original position is absolute
+    if (this._pin && this._controller && this._pinOptions.inFlow) {
+      // no spacer resize, if original position is absolute
+
       const after = (this._state === SCENE_STATE_AFTER);
       const before = (this._state === SCENE_STATE_BEFORE);
       const during = (this._state === SCENE_STATE_DURING);
@@ -788,12 +791,12 @@ class Scene {
     }
 
     // add listener to document to update pin position in case controller is not the document.
-    window.addEventListener('scroll', this._updatePinInContainer);
-    window.addEventListener('resize', this._updatePinInContainer);
-    window.addEventListener('resize', this._updateRelativePinSpacer);
+    window.addEventListener('scroll', this._updatePinInContainer.bind(this), { passive: true });
+    window.addEventListener('resize', this._updatePinInContainer.bind(this), { passive: true });
+    window.addEventListener('resize', this._updateRelativePinSpacer.bind(this), { passive: true });
     // add mousewheel listener to catch scrolls over fixed elements
-    this._pin.addEventListener('mousewheel', this._onMousewheelOverPin);
-    this._pin.addEventListener('DOMMouseScroll', this._onMousewheelOverPin);
+    this._pin.addEventListener('mousewheel', this._onMousewheelOverPin.bind(this));
+    this._pin.addEventListener('DOMMouseScroll', this._onMousewheelOverPin.bind(this));
 
     _util.log(3, 'added pin');
 
@@ -827,12 +830,13 @@ class Scene {
           delete this._pin.___origStyle;
         }
       }
-      window.removeEventListener('scroll', this._updatePinInContainer);
-      window.removeEventListener('resize', this._updatePinInContainer);
-      window.removeEventListener('resize', this._updateRelativePinSpacer);
-      this._pin.removeEventListener('mousewheel', this._onMousewheelOverPin);
-      this._pin.removeEventListener('DOMMouseScroll', this._onMousewheelOverPin);
-      this._pin = undefined;
+      window.removeEventListener('scroll', this._updatePinInContainer.bind(this), { passive: true });
+      window.removeEventListener('resize', this._updatePinInContainer.bind(this), { passive: true });
+      window.removeEventListener('resize', this._updateRelativePinSpacer.bind(this), { passive: true });
+      this._pin.removeEventListener('mousewheel', this._onMousewheelOverPin.bind(this));
+      this._pin.removeEventListener('DOMMouseScroll', this._onMousewheelOverPin.bind(this));
+      this._pin = null;
+      this._pinOptions.spacer = null;
       _util.log(3, `removed pin (reset: ${reset ? 'true' : 'false'})`);
     }
     return this;
@@ -852,8 +856,8 @@ class Scene {
     }
     this._cssClasses = classes;
     this._cssClassElems = elems;
-    this.on('enter.internal_class leave.internal_class', (e) => {
-      const toggle = e.type === 'enter' ? _util.addClass : _util.removeClass;
+    this.on('enter.internal_class leave.internal_class', (event) => {
+      const toggle = event.type === 'enter' ? _util.addClass : _util.removeClass;
       this._cssClassElems.forEach((elem, key) => {
         toggle(elem, this._cssClasses);
       });
@@ -868,7 +872,7 @@ class Scene {
       });
     }
     this.off('start.internal_class end.internal_class');
-    this._cssClasses = undefined;
+    this._cssClasses = null;
     this._cssClassElems = [];
     return this;
   }
@@ -921,8 +925,7 @@ class Scene {
     try {
       // wrap Tween into a Timeline Object if available to include delay and repeats in the duration and standardize methods.
       if (window.TimelineMax) {
-        newTween = new window.TimelineMax({ smoothChildTiming: true })
-          .add(TweenObject);
+        newTween = new window.TimelineMax({ smoothChildTiming: true }).add(TweenObject);
       } else {
         newTween = TweenObject;
       }
@@ -931,62 +934,21 @@ class Scene {
       _util.log(1, "ERROR calling method 'setTween()': Supplied argument is not a valid TweenObject");
       return this;
     }
-    if (this._tween) { // kill old tween?
+
+    if (this._tween) {
+      // kill old tween
       this.removeTween();
     }
+
     this._tween = newTween;
 
     // some properties need to be transferred it to the wrapper, otherwise they would get lost.
-    if (TweenObject.repeat && TweenObject.repeat() === -1) { // TweenMax or TimelineMax Object?
+    if (TweenObject.repeat && TweenObject.repeat() === -1) {
       this._tween.repeat(-1);
       this._tween.yoyo(TweenObject.yoyo());
     }
 
-    // (BUILD) - REMOVE IN MINIFY - START
-
-    // Some tween validations and debugging helpers
-
-    if (this.tweenChanges() && !this._tween.tweenTo) {
-      _util.log(2, 'WARNING: tweenChanges will only work if the TimelineMax object is available for ScrollMagic.');
-    }
-
-    // check if there are position tweens defined for the trigger and warn about it :)
-    if (this._tween && this.controller() && this.triggerElement() && this.loglevel() >= 2) { // controller is needed to know scroll direction.
-      const triggerTweens = window.TweenMax.getTweensOf(this.triggerElement());
-      const vertical = this.controller().info('vertical');
-      triggerTweens.forEach((value, index) => {
-        const tweenvars = value.vars.css || value.vars;
-        const condition = vertical ? (tweenvars.top !== undefined || tweenvars.bottom !== undefined) : (tweenvars.left !== undefined || tweenvars.right !== undefined);
-        if (condition) {
-          _util.log(2, 'WARNING: Tweening the position of the trigger element affects the scene timing and should be avoided!');
-        }
-      });
-    }
-
-    // warn about tween overwrites, when an element is tweened multiple times
-    if (parseFloat(window.TweenMax.version) >= 1.14) { // onOverwrite only present since GSAP v1.14.0
-      const list = this._tween.getChildren ? this._tween.getChildren(true, true, false) : [this._tween]; // get all nested tween objects
-      const newCallback = () => {
-        _util.log(2, 'WARNING: tween was overwritten by another. To learn how to avoid this issue see here: https://github.com/janpaepke/ScrollMagic/wiki/WARNING:-tween-was-overwritten-by-another');
-      };
-      for (let i = 0, thisTween, oldCallback; i < list.length; i++) {
-        /* jshint loopfunc: true */
-        thisTween = list[i];
-        if (oldCallback !== newCallback) { // if tweens is added more than once
-          oldCallback = thisTween.vars.onOverwrite;
-          thisTween.vars.onOverwrite = (...args) => {
-            if (oldCallback) {
-              oldCallback.apply(this, ...args);
-            }
-            newCallback.apply(this, ...args);
-          };
-        }
-      }
-    }
-
     _util.log(3, 'added tween');
-
-    // (BUILD) - REMOVE IN MINIFY - END
 
     this._updateTweenProgress();
 
@@ -999,7 +961,7 @@ class Scene {
         this._tween.progress(0).pause();
       }
       this._tween.kill();
-      this._tween = undefined;
+      this._tween = null;
       _util.log(3, `removed tween (reset: ${reset ? 'true' : 'false'})`);
     }
     return this;
@@ -1015,7 +977,7 @@ class Scene {
 
       this.on('add.plugin_addIndicators', this._indicator.add.bind(this._indicator));
       this.on('remove.plugin_addIndicators', this._indicator.remove.bind(this._indicator));
-      this.on('destroy.plugin_addIndicators', this.removeIndicators);
+      this.on('destroy.plugin_addIndicators', this.removeIndicators.bind(this));
 
       // it the scene already has a controller we can start right away.
       if (this.controller()) {
@@ -1029,7 +991,7 @@ class Scene {
     if (this._indicator) {
       this._indicator.remove();
       this.off('*.plugin_addIndicators');
-      this._indicator = undefined;
+      this._indicator = null;
     }
     return this;
   }

@@ -17,7 +17,7 @@ _type.String = v => _type(v) === 'string';
 _type.Function = v => _type(v) === 'function';
 _type.Array = v => Array.isArray(v);
 _type.Number = v => !_type.Array(v) && (v - parseFloat(v) + 1) >= 0;
-_type.DomElement = o => (typeof HTMLElement === 'object' ? o instanceof HTMLElement : // DOM2
+_type.DomElement = o => (typeof HTMLElement === 'object' || typeof HTMLElement === 'function' ? o instanceof HTMLElement || o instanceof SVGElement : // DOM2
   o && typeof o === 'object' && o !== null && o.nodeType === 1 && typeof o.nodeName === 'string');
 U.type = _type;
 
@@ -28,7 +28,7 @@ U.type = _type;
    */
 
 // parse float and fall back to 0.
-const floatval = number => parseFloat(number) || 0;
+const _floatval = number => parseFloat(number) || 0;
 
 // get current style IE safe (otherwise IE would return calculated values for 'auto')
 const _getComputedStyle = elem => (elem.currentStyle ? elem.currentStyle : window.getComputedStyle(elem));
@@ -45,7 +45,7 @@ const _dimension = (which, elem, outer, includeMargin) => {
   let dimension = (outer ? elem[`offset${which}`] || elem[`outer${which}`] : elem[`client${which}`] || elem[`inner${which}`]) || 0;
   if (outer && includeMargin) {
     const style = _getComputedStyle(elem);
-    dimension += which === 'Height' ? floatval(style.marginTop) + floatval(style.marginBottom) : floatval(style.marginLeft) + floatval(style.marginRight);
+    dimension += which === 'Height' ? _floatval(style.marginTop) + _floatval(style.marginBottom) : _floatval(style.marginLeft) + _floatval(style.marginRight);
   }
   return dimension;
 };

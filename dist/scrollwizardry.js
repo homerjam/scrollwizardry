@@ -71,7 +71,7 @@ _type.Number = function (v) {
   return !_type.Array(v) && v - parseFloat(v) + 1 >= 0;
 };
 _type.DomElement = function (o) {
-  return (typeof HTMLElement === 'undefined' ? 'undefined' : _typeof(HTMLElement)) === 'object' ? o instanceof HTMLElement : // DOM2
+  return (typeof HTMLElement === 'undefined' ? 'undefined' : _typeof(HTMLElement)) === 'object' || typeof HTMLElement === 'function' ? o instanceof HTMLElement || o instanceof SVGElement : // DOM2
   o && (typeof o === 'undefined' ? 'undefined' : _typeof(o)) === 'object' && o !== null && o.nodeType === 1 && typeof o.nodeName === 'string';
 };
 U.type = _type;
@@ -83,7 +83,7 @@ U.type = _type;
    */
 
 // parse float and fall back to 0.
-var floatval = function floatval(number) {
+var _floatval = function _floatval(number) {
   return parseFloat(number) || 0;
 };
 
@@ -104,7 +104,7 @@ var _dimension = function _dimension(which, elem, outer, includeMargin) {
   var dimension = (outer ? elem['offset' + which] || elem['outer' + which] : elem['client' + which] || elem['inner' + which]) || 0;
   if (outer && includeMargin) {
     var style = _getComputedStyle(elem);
-    dimension += which === 'Height' ? floatval(style.marginTop) + floatval(style.marginBottom) : floatval(style.marginLeft) + floatval(style.marginRight);
+    dimension += which === 'Height' ? _floatval(style.marginTop) + _floatval(style.marginBottom) : _floatval(style.marginLeft) + _floatval(style.marginRight);
   }
   return dimension;
 };
@@ -452,7 +452,7 @@ var Indicator = function () {
     // set public variables
     this.options = options;
     this.bounds = this._elemBounds;
-    this.triggerGroup = undefined; // will be set later
+    this.triggerGroup = null; // will be set later
 
     this.scene = scene;
   }
@@ -511,7 +511,7 @@ var Indicator = function () {
           group.members.splice(group.members.indexOf(this), 1);
           this._ctrl.updateTriggerGroupLabel(group);
           this._ctrl.updateTriggerGroupPositions(group);
-          this.triggerGroup = undefined;
+          this.triggerGroup = null;
         } else {
           // remove complete group
           this._removeTriggerGroup();
@@ -622,7 +622,7 @@ var Indicator = function () {
     value: function _removeTriggerGroup() {
       this._ctrl._indicators.groups.splice(this._ctrl._indicators.groups.indexOf(this.triggerGroup), 1);
       this.triggerGroup.element.parentNode.removeChild(this.triggerGroup.element);
-      this.triggerGroup = undefined;
+      this.triggerGroup = null;
     }
 
     // updates the trigger group -> either join existing or add new one
@@ -687,7 +687,7 @@ var Indicator = function () {
         this.triggerGroup.members.splice(this.triggerGroup.members.indexOf(this), 1); // just remove from memberlist of old group
         this._ctrl.updateTriggerGroupLabel(this.triggerGroup);
         this._ctrl.updateTriggerGroupPositions(this.triggerGroup);
-        this.triggerGroup = undefined; // need a brand new group...
+        this.triggerGroup = null; // need a brand new group...
       }
       // _util.log(0, "trigger", options.name, "->", "add a new one");
       // did not find any match, make new trigger group
@@ -784,7 +784,7 @@ var Scene = function () {
         val = parseFloat(val);
         if (!U.type.Number(val) || val < 0) {
           if (this._durationUpdateMethod) {
-            this._durationUpdateMethod = undefined;
+            this._durationUpdateMethod = null;
             throw Error('Invalid return value of supplied function for option "duration": ' + val);
           } else {
             throw Error('Invalid value for option "duration": ' + val);
@@ -994,7 +994,7 @@ var Scene = function () {
         this._updateDuration(true);
         this._updateTriggerElementPosition(true);
         this._updateScrollOffset();
-        this._controller.info('container').addEventListener('resize', this._onContainerResize.bind(this));
+        this._controller.info('container').addEventListener('resize', this._onContainerResize.bind(this), { passive: true });
         controller.addScene(this);
         this.trigger('add', { controller: this._controller });
         U.log(3, 'added ' + NAMESPACE$1 + ' to controller');
@@ -1006,9 +1006,9 @@ var Scene = function () {
     key: 'remove',
     value: function remove() {
       if (this._controller) {
-        this._controller.info('container').removeEventListener('resize', this._onContainerResize.bind(this));
+        this._controller.info('container').removeEventListener('resize', this._onContainerResize.bind(this), { passive: true });
         var tmpParent = this._controller;
-        this._controller = undefined;
+        this._controller = null;
         tmpParent.removeScene(this);
         this.trigger('remove');
         U.log(3, 'removed ' + NAMESPACE$1 + ' from controller');
@@ -1020,6 +1020,7 @@ var Scene = function () {
     value: function destroy(reset) {
       this.trigger('destroy', { reset: reset });
       this.remove();
+      this.triggerElement(null);
       this.off('*.*');
       U.log(3, 'destroyed ' + NAMESPACE$1 + ' (reset: ' + (reset ? 'true' : 'false') + ')');
       return null;
@@ -1257,7 +1258,7 @@ var Scene = function () {
           }
           if (optionName === 'duration') {
             // new duration is set, so any previously set function must be unset
-            _this8._durationUpdateMethod = undefined;
+            _this8._durationUpdateMethod = null;
           }
           if (_this8._changeOption(optionName, arguments.length <= 0 ? undefined : arguments[0])) {
             // set
@@ -1367,7 +1368,8 @@ var Scene = function () {
     key: '_updatePinDimensions',
     value: function _updatePinDimensions() {
       if (this._pin && this._controller && this._pinOptions.inFlow) {
-        // no spacerresize, if original position is absolute
+        // no spacer resize, if original position is absolute
+
         var after = this._state === SCENE_STATE_AFTER;
         var before = this._state === SCENE_STATE_BEFORE;
         var during = this._state === SCENE_STATE_DURING;
@@ -1557,12 +1559,12 @@ var Scene = function () {
       }
 
       // add listener to document to update pin position in case controller is not the document.
-      window.addEventListener('scroll', this._updatePinInContainer);
-      window.addEventListener('resize', this._updatePinInContainer);
-      window.addEventListener('resize', this._updateRelativePinSpacer);
+      window.addEventListener('scroll', this._updatePinInContainer.bind(this), { passive: true });
+      window.addEventListener('resize', this._updatePinInContainer.bind(this), { passive: true });
+      window.addEventListener('resize', this._updateRelativePinSpacer.bind(this), { passive: true });
       // add mousewheel listener to catch scrolls over fixed elements
-      this._pin.addEventListener('mousewheel', this._onMousewheelOverPin);
-      this._pin.addEventListener('DOMMouseScroll', this._onMousewheelOverPin);
+      this._pin.addEventListener('mousewheel', this._onMousewheelOverPin.bind(this));
+      this._pin.addEventListener('DOMMouseScroll', this._onMousewheelOverPin.bind(this));
 
       U.log(3, 'added pin');
 
@@ -1600,12 +1602,13 @@ var Scene = function () {
             delete this._pin.___origStyle;
           }
         }
-        window.removeEventListener('scroll', this._updatePinInContainer);
-        window.removeEventListener('resize', this._updatePinInContainer);
-        window.removeEventListener('resize', this._updateRelativePinSpacer);
-        this._pin.removeEventListener('mousewheel', this._onMousewheelOverPin);
-        this._pin.removeEventListener('DOMMouseScroll', this._onMousewheelOverPin);
-        this._pin = undefined;
+        window.removeEventListener('scroll', this._updatePinInContainer.bind(this), { passive: true });
+        window.removeEventListener('resize', this._updatePinInContainer.bind(this), { passive: true });
+        window.removeEventListener('resize', this._updateRelativePinSpacer.bind(this), { passive: true });
+        this._pin.removeEventListener('mousewheel', this._onMousewheelOverPin.bind(this));
+        this._pin.removeEventListener('DOMMouseScroll', this._onMousewheelOverPin.bind(this));
+        this._pin = null;
+        this._pinOptions.spacer = null;
         U.log(3, 'removed pin (reset: ' + (reset ? 'true' : 'false') + ')');
       }
       return this;
@@ -1629,8 +1632,8 @@ var Scene = function () {
       }
       this._cssClasses = classes;
       this._cssClassElems = elems;
-      this.on('enter.internal_class leave.internal_class', function (e) {
-        var toggle = e.type === 'enter' ? U.addClass : U.removeClass;
+      this.on('enter.internal_class leave.internal_class', function (event) {
+        var toggle = event.type === 'enter' ? U.addClass : U.removeClass;
         _this10._cssClassElems.forEach(function (elem, key) {
           toggle(elem, _this10._cssClasses);
         });
@@ -1648,7 +1651,7 @@ var Scene = function () {
         });
       }
       this.off('start.internal_class end.internal_class');
-      this._cssClasses = undefined;
+      this._cssClasses = null;
       this._cssClassElems = [];
       return this;
     }
@@ -1696,8 +1699,6 @@ var Scene = function () {
   }, {
     key: 'setTween',
     value: function setTween(TweenObject, duration, params) {
-      var _this12 = this;
-
       var newTween = void 0;
       if (arguments.length > 1) {
         if (arguments.length < 3) {
@@ -1718,82 +1719,21 @@ var Scene = function () {
         U.log(1, "ERROR calling method 'setTween()': Supplied argument is not a valid TweenObject");
         return this;
       }
+
       if (this._tween) {
-        // kill old tween?
+        // kill old tween
         this.removeTween();
       }
+
       this._tween = newTween;
 
       // some properties need to be transferred it to the wrapper, otherwise they would get lost.
       if (TweenObject.repeat && TweenObject.repeat() === -1) {
-        // TweenMax or TimelineMax Object?
         this._tween.repeat(-1);
         this._tween.yoyo(TweenObject.yoyo());
       }
 
-      // (BUILD) - REMOVE IN MINIFY - START
-
-      // Some tween validations and debugging helpers
-
-      if (this.tweenChanges() && !this._tween.tweenTo) {
-        U.log(2, 'WARNING: tweenChanges will only work if the TimelineMax object is available for ScrollMagic.');
-      }
-
-      // check if there are position tweens defined for the trigger and warn about it :)
-      if (this._tween && this.controller() && this.triggerElement() && this.loglevel() >= 2) {
-        // controller is needed to know scroll direction.
-        var triggerTweens = window.TweenMax.getTweensOf(this.triggerElement());
-        var vertical = this.controller().info('vertical');
-        triggerTweens.forEach(function (value, index) {
-          var tweenvars = value.vars.css || value.vars;
-          var condition = vertical ? tweenvars.top !== undefined || tweenvars.bottom !== undefined : tweenvars.left !== undefined || tweenvars.right !== undefined;
-          if (condition) {
-            U.log(2, 'WARNING: Tweening the position of the trigger element affects the scene timing and should be avoided!');
-          }
-        });
-      }
-
-      // warn about tween overwrites, when an element is tweened multiple times
-      if (parseFloat(window.TweenMax.version) >= 1.14) {
-        (function () {
-          // onOverwrite only present since GSAP v1.14.0
-          var list = _this12._tween.getChildren ? _this12._tween.getChildren(true, true, false) : [_this12._tween]; // get all nested tween objects
-          var newCallback = function newCallback() {
-            U.log(2, 'WARNING: tween was overwritten by another. To learn how to avoid this issue see here: https://github.com/janpaepke/ScrollMagic/wiki/WARNING:-tween-was-overwritten-by-another');
-          };
-
-          var _loop = function _loop(i, _thisTween, _oldCallback) {
-            /* jshint loopfunc: true */
-            _thisTween = list[i];
-            if (_oldCallback !== newCallback) {
-              // if tweens is added more than once
-              _oldCallback = _thisTween.vars.onOverwrite;
-              _thisTween.vars.onOverwrite = function () {
-                for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-                  args[_key2] = arguments[_key2];
-                }
-
-                if (_oldCallback) {
-                  var _oldCallback2;
-
-                  (_oldCallback2 = _oldCallback).apply.apply(_oldCallback2, [_this12].concat(args));
-                }
-                newCallback.apply.apply(newCallback, [_this12].concat(args));
-              };
-            }
-            thisTween = _thisTween;
-            oldCallback = _oldCallback;
-          };
-
-          for (var i = 0, thisTween, oldCallback; i < list.length; i++) {
-            _loop(i, thisTween, oldCallback);
-          }
-        })();
-      }
-
       U.log(3, 'added tween');
-
-      // (BUILD) - REMOVE IN MINIFY - END
 
       this._updateTweenProgress();
 
@@ -1807,7 +1747,7 @@ var Scene = function () {
           this._tween.progress(0).pause();
         }
         this._tween.kill();
-        this._tween = undefined;
+        this._tween = null;
         U.log(3, 'removed tween (reset: ' + (reset ? 'true' : 'false') + ')');
       }
       return this;
@@ -1825,7 +1765,7 @@ var Scene = function () {
 
         this.on('add.plugin_addIndicators', this._indicator.add.bind(this._indicator));
         this.on('remove.plugin_addIndicators', this._indicator.remove.bind(this._indicator));
-        this.on('destroy.plugin_addIndicators', this.removeIndicators);
+        this.on('destroy.plugin_addIndicators', this.removeIndicators.bind(this));
 
         // it the scene already has a controller we can start right away.
         if (this.controller()) {
@@ -1840,7 +1780,7 @@ var Scene = function () {
       if (this._indicator) {
         this._indicator.remove();
         this.off('*.plugin_addIndicators');
-        this._indicator = undefined;
+        this._indicator = null;
       }
       return this;
     }
@@ -1902,8 +1842,8 @@ var Controller = function () {
     this._viewPortSize = this._getViewportSize();
 
     // set event handlers
-    this.options.container.addEventListener('resize', this._onChange.bind(this));
-    this.options.container.addEventListener('scroll', this._onChange.bind(this));
+    this.options.container.addEventListener('resize', this._onChange.bind(this), { passive: true });
+    this.options.container.addEventListener('scroll', this._onChange.bind(this), { passive: true });
 
     var ri = parseInt(this.options.refreshInterval, 10);
     this.options.refreshInterval = U.type.Number(ri) ? ri : DEFAULT_CONTROLLER_OPTIONS.refreshInterval;
@@ -1919,14 +1859,14 @@ var Controller = function () {
     };
 
     if (this.options.addIndicators) {
-      this._container.addEventListener('resize', this._handleTriggerPositionChange.bind(this));
+      this._container.addEventListener('resize', this._handleTriggerPositionChange.bind(this), { passive: true });
       if (!this._isDocument) {
-        window.addEventListener('resize', this._handleTriggerPositionChange.bind(this));
-        window.addEventListener('scroll', this._handleTriggerPositionChange.bind(this));
+        window.addEventListener('resize', this._handleTriggerPositionChange.bind(this), { passive: true });
+        window.addEventListener('scroll', this._handleTriggerPositionChange.bind(this), { passive: true });
       }
       // update all related bounds containers
-      this._container.addEventListener('resize', this._handleBoundsPositionChange.bind(this));
-      this._container.addEventListener('scroll', this._handleBoundsPositionChange.bind(this));
+      this._container.addEventListener('resize', this._handleBoundsPositionChange.bind(this), { passive: true });
+      this._container.addEventListener('scroll', this._handleBoundsPositionChange.bind(this), { passive: true });
     }
 
     U.log(3, 'added new ' + NAMESPACE);
@@ -2265,8 +2205,8 @@ var Controller = function () {
         this._sceneObjects[i].destroy(resetScenes);
       }
 
-      this.options.container.removeEventListener('resize', this._onChange.bind(this));
-      this.options.container.removeEventListener('scroll', this._onChange.bind(this));
+      this.options.container.removeEventListener('resize', this._onChange.bind(this), { passive: true });
+      this.options.container.removeEventListener('scroll', this._onChange.bind(this), { passive: true });
 
       U.cAF(this._updateTimeout);
 
@@ -2275,13 +2215,13 @@ var Controller = function () {
       // indicators
 
       if (this.options.addIndicators) {
-        this._container.removeEventListener('resize', this._handleTriggerPositionChange.bind(this));
+        this._container.removeEventListener('resize', this._handleTriggerPositionChange.bind(this), { passive: true });
         if (!this._isDocument) {
-          window.removeEventListener('resize', this._handleTriggerPositionChange.bind(this));
-          window.removeEventListener('scroll', this._handleTriggerPositionChange.bind(this));
+          window.removeEventListener('resize', this._handleTriggerPositionChange.bind(this), { passive: true });
+          window.removeEventListener('scroll', this._handleTriggerPositionChange.bind(this), { passive: true });
         }
-        this._container.removeEventListener('resize', this._handleBoundsPositionChange.bind(this));
-        this._container.removeEventListener('scroll', this._handleBoundsPositionChange.bind(this));
+        this._container.removeEventListener('resize', this._handleBoundsPositionChange.bind(this), { passive: true });
+        this._container.removeEventListener('scroll', this._handleBoundsPositionChange.bind(this), { passive: true });
       }
 
       return null;
@@ -2391,6 +2331,11 @@ var Controller = function () {
   }]);
   return Controller;
 }();
+
+/* eslint-env browser */
+
+// TODO: temporary workaround for chrome's scroll jitter bug
+// window.addEventListener('mousewheel', () => {}, { passive: true });
 
 var index = {
   Controller: Controller,
