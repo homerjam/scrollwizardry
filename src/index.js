@@ -6,7 +6,7 @@ import Scene from './Scene';
 // TODO: temporary workaround for chrome's scroll jitter bug
 // window.addEventListener('mousewheel', () => {}, { passive: true });
 
-export default {
+export {
   Controller,
   Scene,
 };
