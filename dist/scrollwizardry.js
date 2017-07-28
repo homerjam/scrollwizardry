@@ -1,5 +1,8 @@
-var ScrollWizardry = (function () {
-'use strict';
+(function (global, factory) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+	typeof define === 'function' && define.amd ? define(['exports'], factory) :
+	(factory((global.ScrollWizardry = {})));
+}(this, (function (exports) { 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
   return typeof obj;
@@ -82,11 +85,6 @@ U.type = _type;
    * ------------------------------
    */
 
-// parse float and fall back to 0.
-var _floatval = function _floatval(number) {
-  return parseFloat(number) || 0;
-};
-
 // get current style IE safe (otherwise IE would return calculated values for 'auto')
 var _getComputedStyle = function _getComputedStyle(elem) {
   return elem.currentStyle ? elem.currentStyle : window.getComputedStyle(elem);
@@ -104,7 +102,7 @@ var _dimension = function _dimension(which, elem, outer, includeMargin) {
   var dimension = (outer ? elem['offset' + which] || elem['outer' + which] : elem['client' + which] || elem['inner' + which]) || 0;
   if (outer && includeMargin) {
     var style = _getComputedStyle(elem);
-    dimension += which === 'Height' ? _floatval(style.marginTop) + _floatval(style.marginBottom) : _floatval(style.marginLeft) + _floatval(style.marginRight);
+    dimension += which === 'Height' ? U.floatVal(style.marginTop) + U.floatVal(style.marginBottom) : U.floatVal(style.marginLeft) + U.floatVal(style.marginRight);
   }
   return dimension;
 };
@@ -121,6 +119,11 @@ var _camelCase = function _camelCase(str) {
    * External helpers
    * ------------------------------
    */
+
+// parse float and fall back to 0.
+U.floatVal = function (number) {
+  return parseFloat(number) || 0;
+};
 
 // extend obj – same as jQuery.extend({}, objA, objB)
 U.extend = function (obj) {
@@ -793,6 +796,9 @@ var Scene = function () {
         return val;
       },
       offset: function offset(val) {
+        if (U.type.Function(val)) {
+          val = val();
+        }
         val = parseFloat(val);
         if (!U.type.Number(val)) {
           throw Error('Invalid value for option "offset": ' + val);
@@ -1130,7 +1136,8 @@ var Scene = function () {
   }, {
     key: '_updateScrollOffset',
     value: function _updateScrollOffset() {
-      this._scrollOffset = { start: this._triggerPos + this.options.offset };
+      var offset = U.type.Function(this.options.offset) ? this.options.offset() : this.options.offset;
+      this._scrollOffset = { start: this._triggerPos + offset };
       if (this._controller && this.options.triggerElement) {
         // take away triggerHook portion to get relative to top
         this._scrollOffset.start -= this._controller.info('size') * this.options.triggerHook;
@@ -1290,18 +1297,19 @@ var Scene = function () {
   }, {
     key: 'triggerPosition',
     value: function triggerPosition() {
-      var pos = this.options.offset; // the offset is the basis
+      // the offset is the basis
+      var offset = U.type.Function(this.options.offset) ? this.options.offset() : this.options.offset;
       if (this._controller) {
         // get the trigger position
         if (this.options.triggerElement) {
           // Element as trigger
-          pos += this._triggerPos;
+          offset += this._triggerPos;
         } else {
           // return the height of the triggerHook to start at the beginning
-          pos += this._controller.info('size') * this.triggerHook();
+          offset += this._controller.info('size') * this.triggerHook();
         }
       }
-      return pos;
+      return offset;
     }
 
     // pinning
@@ -2243,6 +2251,12 @@ var Controller = function () {
     key: '_handleTriggerPositionChange',
     value: function _handleTriggerPositionChange() {
       this.updateTriggerGroupPositions();
+
+      this._sceneObjects.forEach(function (scene, index) {
+        if (scene._indicator) {
+          scene._indicator._updateBounds();
+        }
+      });
     }
 
     // updates the position of the bounds container to aligned to the right for vertical containers and to the bottom for horizontal
@@ -2334,15 +2348,10 @@ var Controller = function () {
 
 /* eslint-env browser */
 
-// TODO: temporary workaround for chrome's scroll jitter bug
-// window.addEventListener('mousewheel', () => {}, { passive: true });
+exports.Controller = Controller;
+exports.Scene = Scene;
 
-var index = {
-  Controller: Controller,
-  Scene: Scene
-};
+Object.defineProperty(exports, '__esModule', { value: true });
 
-return index;
-
-}());
+})));
 //# sourceMappingURL=scrollwizardry.js.map
