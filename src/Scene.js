@@ -153,7 +153,6 @@ class Scene {
     });
 
     this.on('shift.internal', (event) => {
-      this._updateScrollOffset();
       this.update(); // update scene to reflect new position
     });
 
@@ -313,6 +312,7 @@ class Scene {
 
   update(immediately) {
     if (this._controller) {
+      this._updateScrollOffset();
       if (immediately) {
         if (this._controller.enabled()) {
           const scrollPos = this._controller.info('scrollPos');
