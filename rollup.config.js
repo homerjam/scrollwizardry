@@ -1,11 +1,13 @@
 import babel from 'rollup-plugin-babel';
 
 export default {
-  entry: 'src/index.js',
-  dest: 'dist/scrollwizardry.js',
-  format: 'umd',
-  moduleName: 'ScrollWizardry',
-  sourceMap: true,
+  input: 'src/index.js',
+  output: {
+    file: 'dist/scrollwizardry.js',
+    format: 'umd',
+  },
+  name: 'ScrollWizardry',
+  sourcemap: true,
   plugins: [
     babel({
       exclude: 'node_modules/**',
