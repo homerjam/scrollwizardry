@@ -338,7 +338,7 @@ class Controller {
       container: this.options.container,
       isDocument: this._isDocument,
     };
-    if (values[about]) {
+    if (values[about] !== undefined) {
       return values[about];
     }
     return values;
