@@ -915,7 +915,7 @@ var Scene = function () {
         var listeners = this._listeners[eventname];
         Log.log(3, 'event fired:', eventname, vars ? '->' : '', vars || '');
         if (listeners) {
-          listeners.forEach(function (listener, key) {
+          listeners.forEach(function (listener) {
             if (!namespace || namespace === listener.namespace) {
               listener.callback.call(_this5, new Event$1(eventname, listener.namespace, _this5, vars));
             }
@@ -1157,7 +1157,7 @@ var Scene = function () {
       }
 
       check = check.length ? check : Object.keys(this.validate);
-      check.forEach(function (optionName, key) {
+      check.forEach(function (optionName) {
         var value = void 0;
         if (_this7.validate[optionName]) {
           // there is a validation method for this option
@@ -1267,7 +1267,7 @@ var Scene = function () {
           // pinned state
           if (Util.css(pinTarget).position !== 'fixed') {
             // change state before updating pin spacer (position changes due to fixed collapsing might occur.)
-            pinTarget.style.position = 'fixed';
+            Util.css(pinTarget, { position: 'fixed' });
             // update pin spacer
             this._updatePinDimensions();
           }
@@ -1280,8 +1280,7 @@ var Scene = function () {
           fixedPos[containerInfo.vertical ? 'top' : 'left'] += scrollDistance;
 
           // set new values
-          this._pinOptions.spacer.firstChild.style.top = fixedPos.top;
-          this._pinOptions.spacer.firstChild.style.left = fixedPos.left;
+          Util.css(this._pinOptions.spacer.firstChild, fixedPos);
         } else {
           // unpinned state
           var newCSS = {
@@ -1332,9 +1331,9 @@ var Scene = function () {
         // if relsize: spacer -> pin | else: pin -> spacer
         if (this._pinOptions.relSize.width || this._pinOptions.relSize.autoFullWidth) {
           if (during) {
-            this._pin.style.width = Util.width(this._pinOptions.spacer);
+            Util.css(this._pin, { width: Util.width(this._pinOptions.spacer) });
           } else {
-            this._pin.style.width = '100%';
+            Util.css(this._pin, { width: '100%' });
           }
         } else {
           // minwidth is needed for cascaded pins.
@@ -1478,10 +1477,10 @@ var Scene = function () {
 
       if (!this._pin.___origStyle) {
         this._pin.___origStyle = {};
-        var pinInlineCSS = this._pin.style;
+        var pinInlineStyle = this._pin.style;
         var copyStyles = boundsParams.concat(['width', 'height', 'position', 'boxSizing', 'mozBoxSizing', 'webkitBoxSizing']);
         copyStyles.forEach(function (val) {
-          _this9._pin.___origStyle[val] = pinInlineCSS[val] || '';
+          _this9._pin.___origStyle[val] = pinInlineStyle[val] || '';
         });
       }
 
@@ -1540,11 +1539,11 @@ var Scene = function () {
           var pinTarget = this._pinOptions.spacer.firstChild; // usually the pin element, but may be another spacer (cascaded pins)...
           if (pinTarget.hasAttribute(PIN_SPACER_ATTRIBUTE$1)) {
             // copy margins to child spacer
-            var style = this._pinOptions.spacer.style;
+            var inlineStyle = this._pinOptions.spacer.style;
             var values = ['margin', 'marginLeft', 'marginRight', 'marginTop', 'marginBottom'];
             var margins = {};
             values.forEach(function (val) {
-              margins[val] = style[val] || '';
+              margins[val] = inlineStyle[val] || '';
             });
             Util.css(pinTarget, margins);
           }
@@ -2230,7 +2229,9 @@ var Controller = function () {
 
         while (boundsCount--) {
           // indicators loop
-          group.members[boundsCount].bounds.style[pos] = edge - triggerSize;
+          var boundsCss = {};
+          boundsCss[pos] = edge - triggerSize;
+          Util.css(group.members[boundsCount].bounds, boundsCss);
         }
       }
     }
@@ -2248,6 +2249,7 @@ var Controller = function () {
       var edge = this._vertical ? Util.width(this._container) - EDGE_OFFSET : Util.height(this._container) - EDGE_OFFSET;
       var dimension = this._vertical ? 'width' : 'height';
       var transformAxis = this._vertical ? 'Y' : 'X';
+
       // changing vars
       var group = void 0;
       var el = void 0;
@@ -2261,10 +2263,12 @@ var Controller = function () {
         elSize = Util[dimension](el.firstChild.firstChild);
         transform = pos > elSize ? 'translate' + transformAxis + '(-100%)' : '';
 
-        el.style.top = containerOffset.top + (this._vertical ? pos : edge - group.members[0].options.indent);
-        el.style.left = containerOffset.left + (this._vertical ? edge - group.members[0].options.indent : pos);
+        Util.css(el, {
+          top: containerOffset.top + (this._vertical ? pos : edge - group.members[0].options.indent),
+          left: containerOffset.left + (this._vertical ? edge - group.members[0].options.indent : pos)
+        });
 
-        el.firstChild.firstChild.style.transform = transform;
+        Util.css(el.firstChild.firstChild, { transform: transform });
       }
     }
 

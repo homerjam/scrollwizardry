@@ -455,7 +455,9 @@ class Controller {
       triggerSize = Util[dimension](group.element.firstChild);
 
       while (boundsCount--) { // indicators loop
-        group.members[boundsCount].bounds.style[pos] = edge - triggerSize;
+        const boundsCss = {};
+        boundsCss[pos] = edge - triggerSize;
+        Util.css(group.members[boundsCount].bounds, boundsCss);
       }
     }
   }
@@ -472,6 +474,7 @@ class Controller {
       Util.height(this._container) - EDGE_OFFSET;
     const dimension = this._vertical ? 'width' : 'height';
     const transformAxis = this._vertical ? 'Y' : 'X';
+
     // changing vars
     let group;
     let el;
@@ -485,10 +488,12 @@ class Controller {
       elSize = Util[dimension](el.firstChild.firstChild);
       transform = pos > elSize ? `translate${transformAxis}(-100%)` : '';
 
-      el.style.top = containerOffset.top + (this._vertical ? pos : edge - group.members[0].options.indent);
-      el.style.left = containerOffset.left + (this._vertical ? edge - group.members[0].options.indent : pos);
+      Util.css(el, {
+        top: containerOffset.top + (this._vertical ? pos : edge - group.members[0].options.indent),
+        left: containerOffset.left + (this._vertical ? edge - group.members[0].options.indent : pos),
+      });
 
-      el.firstChild.firstChild.style.transform = transform;
+      Util.css(el.firstChild.firstChild, { transform });
     }
   }
 

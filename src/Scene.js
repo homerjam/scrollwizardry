@@ -259,7 +259,7 @@ class Scene {
       const listeners = this._listeners[eventname];
       Log.log(3, 'event fired:', eventname, vars ? '->' : '', vars || '');
       if (listeners) {
-        listeners.forEach((listener, key) => {
+        listeners.forEach((listener) => {
           if (!namespace || namespace === listener.namespace) {
             listener.callback.call(this, new Event(eventname, listener.namespace, this, vars));
           }
@@ -471,7 +471,7 @@ class Scene {
 
   _validateOption(...check) {
     check = check.length ? check : Object.keys(this.validate);
-    check.forEach((optionName, key) => {
+    check.forEach((optionName) => {
       let value;
       if (this.validate[optionName]) { // there is a validation method for this option
         try { // validate value
@@ -564,7 +564,7 @@ class Scene {
         // pinned state
         if (Util.css(pinTarget).position !== 'fixed') {
           // change state before updating pin spacer (position changes due to fixed collapsing might occur.)
-          pinTarget.style.position = 'fixed';
+          Util.css(pinTarget, { position: 'fixed' });
           // update pin spacer
           this._updatePinDimensions();
         }
@@ -578,8 +578,7 @@ class Scene {
         fixedPos[containerInfo.vertical ? 'top' : 'left'] += scrollDistance;
 
         // set new values
-        this._pinOptions.spacer.firstChild.style.top = fixedPos.top;
-        this._pinOptions.spacer.firstChild.style.left = fixedPos.left;
+        Util.css(this._pinOptions.spacer.firstChild, fixedPos);
 
       } else {
         // unpinned state
@@ -593,6 +592,7 @@ class Scene {
 
         if (!this._pinOptions.pushFollowers) {
           newCSS[containerInfo.vertical ? 'top' : 'left'] = this.options.duration * this._progress;
+
         } else if (this.options.duration > 0) { // only concerns scenes with duration
           if (this._state === SCENE_STATE_AFTER && parseFloat(Util.css(this._pinOptions.spacer).paddingTop) === 0) {
             change = true; // if in after state but havent updated spacer yet (jumped past pin)
@@ -628,9 +628,9 @@ class Scene {
       // if relsize: spacer -> pin | else: pin -> spacer
       if (this._pinOptions.relSize.width || this._pinOptions.relSize.autoFullWidth) {
         if (during) {
-          this._pin.style.width = Util.width(this._pinOptions.spacer);
+          Util.css(this._pin, { width: Util.width(this._pinOptions.spacer) });
         } else {
-          this._pin.style.width = '100%';
+          Util.css(this._pin, { width: '100%' });
         }
 
       } else {
@@ -772,10 +772,10 @@ class Scene {
 
     if (!this._pin.___origStyle) {
       this._pin.___origStyle = {};
-      const pinInlineCSS = this._pin.style;
+      const pinInlineStyle = this._pin.style;
       const copyStyles = boundsParams.concat(['width', 'height', 'position', 'boxSizing', 'mozBoxSizing', 'webkitBoxSizing']);
       copyStyles.forEach((val) => {
-        this._pin.___origStyle[val] = pinInlineCSS[val] || '';
+        this._pin.___origStyle[val] = pinInlineStyle[val] || '';
       });
     }
 
@@ -831,11 +831,11 @@ class Scene {
       if (reset || !this._controller) { // if there's no controller no progress was made anyway...
         const pinTarget = this._pinOptions.spacer.firstChild; // usually the pin element, but may be another spacer (cascaded pins)...
         if (pinTarget.hasAttribute(PIN_SPACER_ATTRIBUTE)) { // copy margins to child spacer
-          const style = this._pinOptions.spacer.style;
+          const inlineStyle = this._pinOptions.spacer.style;
           const values = ['margin', 'marginLeft', 'marginRight', 'marginTop', 'marginBottom'];
           const margins = {};
           values.forEach((val) => {
-            margins[val] = style[val] || '';
+            margins[val] = inlineStyle[val] || '';
           });
           Util.css(pinTarget, margins);
         }
