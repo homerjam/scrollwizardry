@@ -374,6 +374,17 @@ var Indicator = function () {
   function Indicator(scene, options) {
     classCallCheck(this, Indicator);
 
+    var DEFAULT_INDICATOR_OPTIONS = {
+      name: '',
+      indent: 0,
+      parent: undefined,
+      colorStart: 'green',
+      colorEnd: 'red',
+      colorTrigger: 'blue'
+    };
+
+    options = _.merge({}, DEFAULT_INDICATOR_OPTIONS, options);
+
     options.name = options.name || _autoindex;
 
     _autoindex++;
@@ -651,25 +662,6 @@ var SCENE_STATE_BEFORE = 'BEFORE';
 var SCENE_STATE_DURING = 'DURING';
 var SCENE_STATE_AFTER = 'AFTER';
 
-var DEFAULT_INDICATOR_OPTIONS = {
-  name: '',
-  indent: 0,
-  parent: undefined,
-  colorStart: 'green',
-  colorEnd: 'red',
-  colorTrigger: 'blue'
-};
-
-var DEFAULT_SCENE_OPTIONS = {
-  duration: 0,
-  offset: 0,
-  triggerElement: undefined,
-  triggerHook: 0.5,
-  reverse: true,
-  loglevel: 2,
-  tweenChanges: false
-};
-
 // list of options that trigger a `shift` event
 var SHIFTS = ['duration', 'offset', 'triggerHook'];
 
@@ -678,6 +670,16 @@ var Scene = function () {
     var _this = this;
 
     classCallCheck(this, Scene);
+
+    var DEFAULT_SCENE_OPTIONS = {
+      duration: 0,
+      offset: 0,
+      triggerElement: undefined,
+      triggerHook: 0.5,
+      reverse: true,
+      loglevel: 2,
+      tweenChanges: false
+    };
 
     this.options = _.merge({}, DEFAULT_SCENE_OPTIONS, options);
 
@@ -1710,10 +1712,10 @@ var Scene = function () {
 
   }, {
     key: 'addIndicators',
-    value: function addIndicators(options) {
-      if (!this._indicator) {
-        options = _.merge({}, DEFAULT_INDICATOR_OPTIONS, options);
+    value: function addIndicators() {
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
+      if (!this._indicator) {
         this._indicator = new Indicator(this, options);
 
         this.on('add.plugin_addIndicators', this._indicator.add.bind(this._indicator));
@@ -1753,18 +1755,18 @@ var SCROLL_DIRECTION_PAUSED = 'PAUSED';
 
 var EDGE_OFFSET = 15; // minimum edge distance, added to indentation
 
-var DEFAULT_CONTROLLER_OPTIONS = {
-  container: window,
-  vertical: true,
-  globalSceneOptions: {},
-  loglevel: 2,
-  refreshInterval: 100,
-  addIndicators: false
-};
-
 var Controller = function () {
   function Controller(options) {
     classCallCheck(this, Controller);
+
+    var DEFAULT_CONTROLLER_OPTIONS = {
+      container: window,
+      vertical: true,
+      globalSceneOptions: {},
+      loglevel: 2,
+      refreshInterval: 100,
+      addIndicators: false
+    };
 
     this.options = _.merge({}, DEFAULT_CONTROLLER_OPTIONS, options);
 

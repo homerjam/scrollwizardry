@@ -14,30 +14,21 @@ const SCENE_STATE_BEFORE = 'BEFORE';
 const SCENE_STATE_DURING = 'DURING';
 const SCENE_STATE_AFTER = 'AFTER';
 
-const DEFAULT_INDICATOR_OPTIONS = {
-  name: '',
-  indent: 0,
-  parent: undefined,
-  colorStart: 'green',
-  colorEnd: 'red',
-  colorTrigger: 'blue',
-};
-
-const DEFAULT_SCENE_OPTIONS = {
-  duration: 0,
-  offset: 0,
-  triggerElement: undefined,
-  triggerHook: 0.5,
-  reverse: true,
-  loglevel: 2,
-  tweenChanges: false,
-};
-
 // list of options that trigger a `shift` event
 const SHIFTS = ['duration', 'offset', 'triggerHook'];
 
 class Scene {
   constructor(options) {
+    const DEFAULT_SCENE_OPTIONS = {
+      duration: 0,
+      offset: 0,
+      triggerElement: undefined,
+      triggerHook: 0.5,
+      reverse: true,
+      loglevel: 2,
+      tweenChanges: false,
+    };
+
     this.options = _.merge({}, DEFAULT_SCENE_OPTIONS, options);
 
     this._state = SCENE_STATE_BEFORE;
@@ -985,10 +976,8 @@ class Scene {
 
   // indicators
 
-  addIndicators(options) {
+  addIndicators(options = {}) {
     if (!this._indicator) {
-      options = _.merge({}, DEFAULT_INDICATOR_OPTIONS, options);
-
       this._indicator = new Indicator(this, options);
 
       this.on('add.plugin_addIndicators', this._indicator.add.bind(this._indicator));

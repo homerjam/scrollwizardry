@@ -1,5 +1,6 @@
 /* eslint-env browser */
 
+import _ from 'lodash';
 import Util from './Util';
 import Log from './Log';
 
@@ -92,6 +93,17 @@ let _autoindex = 0;
 
 class Indicator {
   constructor(scene, options) {
+    const DEFAULT_INDICATOR_OPTIONS = {
+      name: '',
+      indent: 0,
+      parent: undefined,
+      colorStart: 'green',
+      colorEnd: 'red',
+      colorTrigger: 'blue',
+    };
+
+    options = _.merge({}, DEFAULT_INDICATOR_OPTIONS, options);
+
     options.name = options.name || _autoindex;
 
     _autoindex++;

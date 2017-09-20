@@ -15,17 +15,17 @@ const SCROLL_DIRECTION_PAUSED = 'PAUSED';
 
 const EDGE_OFFSET = 15; // minimum edge distance, added to indentation
 
-const DEFAULT_CONTROLLER_OPTIONS = {
-  container: window,
-  vertical: true,
-  globalSceneOptions: {},
-  loglevel: 2,
-  refreshInterval: 100,
-  addIndicators: false,
-};
-
 class Controller {
   constructor(options) {
+    const DEFAULT_CONTROLLER_OPTIONS = {
+      container: window,
+      vertical: true,
+      globalSceneOptions: {},
+      loglevel: 2,
+      refreshInterval: 100,
+      addIndicators: false,
+    };
+
     this.options = _.merge({}, DEFAULT_CONTROLLER_OPTIONS, options);
 
     this.options.container = Util.elements(this.options.container)[0];
