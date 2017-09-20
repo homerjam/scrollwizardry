@@ -1,8 +1,10 @@
 /* eslint-env browser */
 
-import _util from './_util';
+import _ from 'lodash';
+import Util from './Util';
 import Event from './Event';
 import Indicator from './Indicator';
+import Log from './Log';
 
 const PIN_SPACER_ATTRIBUTE = 'data-scrollmagic-pin-spacer';
 
@@ -36,7 +38,7 @@ const SHIFTS = ['duration', 'offset', 'triggerHook'];
 
 class Scene {
   constructor(options) {
-    this.options = _util.extend({}, DEFAULT_SCENE_OPTIONS, options);
+    this.options = _.merge({}, DEFAULT_SCENE_OPTIONS, options);
 
     this._state = SCENE_STATE_BEFORE;
     this._progress = 0;
@@ -57,20 +59,20 @@ class Scene {
     this._indicator = null;
 
     // add getters/setters for all possible options
-    for (const optionName in DEFAULT_SCENE_OPTIONS) {
+    Object.keys(DEFAULT_SCENE_OPTIONS).forEach((optionName) => {
       this._addSceneOption(optionName);
-    }
+    });
 
     this.validate = {
       duration(val) {
-        if (_util.type.String(val) && val.match(/^(\.|\d)*\d+%$/)) {
+        if (_.isString(val) && val.match(/^(\.|\d)*\d+%$/)) {
         // percentage value
           const perc = parseFloat(val) / 100;
           val = () => {
             return this._controller ? this._controller.info('size') * perc : 0;
           };
         }
-        if (_util.type.Function(val)) {
+        if (_.isFunction(val)) {
         // function
           this._durationUpdateMethod = val;
           try {
@@ -81,7 +83,7 @@ class Scene {
         }
         // val has to be float
         val = parseFloat(val);
-        if (!_util.type.Number(val) || val < 0) {
+        if (!_.isNumber(val) || val < 0) {
           if (this._durationUpdateMethod) {
             this._durationUpdateMethod = null;
             throw Error(`Invalid return value of supplied function for option "duration": ${val}`);
@@ -92,11 +94,11 @@ class Scene {
         return val;
       },
       offset(val) {
-        if (_util.type.Function(val)) {
+        if (_.isFunction(val)) {
           val = val();
         }
         val = parseFloat(val);
-        if (!_util.type.Number(val)) {
+        if (!_.isNumber(val)) {
           throw Error(`Invalid value for option "offset": ${val}`);
         }
         return val;
@@ -104,9 +106,9 @@ class Scene {
       triggerElement(val) {
         val = val || undefined;
         if (val) {
-          const elem = _util.get.elements(val)[0];
-          if (elem && elem.parentNode) {
-            val = elem;
+          const el = _.isString(val) ? Util.elements(val)[0] : val;
+          if (el && el.parentNode) {
+            val = el;
           } else {
             throw Error(`Element defined in option "triggerElement" was not found: ${val}`);
           }
@@ -115,7 +117,7 @@ class Scene {
       },
       triggerHook(val) {
         const translate = { onCenter: 0.5, onEnter: 1, onLeave: 0 };
-        if (_util.type.Number(val)) {
+        if (_.isNumber(val)) {
           val = Math.max(0, Math.min(parseFloat(val), 1)); //  make sure its betweeen 0 and 1
         } else if (val in translate) {
           val = translate[val];
@@ -129,7 +131,7 @@ class Scene {
       },
       loglevel(val) {
         val = parseInt(val, 10);
-        if (!_util.type.Number(val) || val < 0 || val > 3) {
+        if (!_.isNumber(val) || val < 0 || val > 3) {
           throw Error(`Invalid value for option "loglevel": ${val}`);
         }
         return val;
@@ -199,7 +201,7 @@ class Scene {
   }
 
   on(names, callback) {
-    if (_util.type.Function(callback)) {
+    if (_.isFunction(callback)) {
       names = names.trim().split(' ');
       names.forEach((fullname) => {
         const nameparts = fullname.split('.');
@@ -216,14 +218,14 @@ class Scene {
         }
       });
     } else {
-      _util.log(1, `ERROR when calling '.on()': Supplied callback for '${names}' is not a valid function!`);
+      Log.log(1, `ERROR when calling '.on()': Supplied callback for '${names}' is not a valid function!`);
     }
     return this;
   }
 
   off(names, callback) {
     if (!names) {
-      _util.log(1, 'ERROR: Invalid event name supplied.');
+      Log.log(1, 'ERROR: Invalid event name supplied.');
       return this;
     }
     names = names.trim().split(' ');
@@ -255,7 +257,7 @@ class Scene {
       const eventname = nameparts[0];
       const namespace = nameparts[1];
       const listeners = this._listeners[eventname];
-      _util.log(3, 'event fired:', eventname, vars ? '->' : '', vars || '');
+      Log.log(3, 'event fired:', eventname, vars ? '->' : '', vars || '');
       if (listeners) {
         listeners.forEach((listener, key) => {
           if (!namespace || namespace === listener.namespace) {
@@ -264,7 +266,7 @@ class Scene {
         });
       }
     } else {
-      _util.log(1, 'ERROR: Invalid event name supplied.');
+      Log.log(1, 'ERROR: Invalid event name supplied.');
     }
     return this;
   }
@@ -283,7 +285,7 @@ class Scene {
       this._controller.info('container').addEventListener('resize', this._onContainerResize.bind(this), { passive: true });
       controller.addScene(this);
       this.trigger('add', { controller: this._controller });
-      _util.log(3, `added ${NAMESPACE} to controller`);
+      Log.log(3, `added ${NAMESPACE} to controller`);
       this.update();
     }
     return this;
@@ -296,7 +298,7 @@ class Scene {
       this._controller = null;
       tmpParent.removeScene(this);
       this.trigger('remove');
-      _util.log(3, `removed ${NAMESPACE} from controller`);
+      Log.log(3, `removed ${NAMESPACE} from controller`);
     }
     return this;
   }
@@ -306,7 +308,7 @@ class Scene {
     this.remove();
     this.triggerElement(null);
     this.off('*.*');
-    _util.log(3, `destroyed ${NAMESPACE} (reset: ${reset ? 'true' : 'false'})`);
+    Log.log(3, `destroyed ${NAMESPACE} (reset: ${reset ? 'true' : 'false'})`);
     return null;
   }
 
@@ -405,7 +407,7 @@ class Scene {
   }
 
   _updateScrollOffset() {
-    const offset = _util.type.Function(this.options.offset) ? this.options.offset() : this.options.offset;
+    const offset = _.isFunction(this.options.offset) ? this.options.offset() : this.options.offset;
     this._scrollOffset = { start: this._triggerPos + offset };
     if (this._controller && this.options.triggerElement) {
       // take away triggerHook portion to get relative to top
@@ -432,7 +434,7 @@ class Scene {
       if (telem) { // there currently a triggerElement set
         if (telem.parentNode) { // check if element is still attached to DOM
           const controllerInfo = this._controller.info();
-          const containerOffset = _util.get.offset(controllerInfo.container); // container position is needed because element offset is returned in relation to document, not in relation to container.
+          const containerOffset = Util.offset(controllerInfo.container); // container position is needed because element offset is returned in relation to document, not in relation to container.
           const param = controllerInfo.vertical ? 'top' : 'left'; // which param is of interest ?
 
           // if parent is spacer, use spacer position instead so correct start position is returned for pinned elements.
@@ -440,7 +442,7 @@ class Scene {
             telem = telem.parentNode;
           }
 
-          const elementOffset = _util.get.offset(telem);
+          const elementOffset = Util.offset(telem);
 
           if (!controllerInfo.isDocument) { // container is not the document root, so substract scroll Position to get correct trigger element position relative to scrollcontent
             containerOffset[param] -= this._controller.scrollPos();
@@ -448,7 +450,7 @@ class Scene {
 
           elementPos = elementOffset[param] - containerOffset[param];
         } else { // there was an element, but it was removed from DOM
-          _util.log(2, 'WARNING: triggerElement was removed from DOM and will be reset to', undefined);
+          Log.log(2, 'WARNING: triggerElement was removed from DOM and will be reset to', undefined);
           this.triggerElement(undefined); // unset, so a change event is triggered
         }
       }
@@ -476,13 +478,13 @@ class Scene {
           value = this.validate[optionName].call(this, this.options[optionName]);
         } catch (event) { // validation failed -> reset to default
           value = DEFAULT_SCENE_OPTIONS[optionName];
-          const logMSG = _util.type.String(event) ? [event] : event;
-          if (_util.type.Array(logMSG)) {
+          const logMSG = _.isString(event) ? [event] : event;
+          if (_.isArray(logMSG)) {
             logMSG[0] = `ERROR: ${logMSG[0]}`;
             logMSG.unshift(1); // loglevel 1 for error msg
-            _util.log.apply(this, logMSG);
+            Log.log.apply(this, logMSG);
           } else {
-            _util.log(1, `ERROR: Problem executing validation callback for option '${optionName}':`, event.message);
+            Log.log(1, `ERROR: Problem executing validation callback for option '${optionName}':`, event.message);
           }
         } finally {
           // this.options[optionName] = value;
@@ -537,7 +539,7 @@ class Scene {
 
   triggerPosition() {
     // the offset is the basis
-    let offset = _util.type.Function(this.options.offset) ? this.options.offset() : this.options.offset;
+    let offset = _.isFunction(this.options.offset) ? this.options.offset() : this.options.offset;
     if (this._controller) {
       // get the trigger position
       if (this.options.triggerElement) {
@@ -560,14 +562,14 @@ class Scene {
 
       if (!forceUnpin && this._state === SCENE_STATE_DURING) { // during scene or if duration is 0 and we are past the trigger
         // pinned state
-        if (_util.css(pinTarget, 'position') !== 'fixed') {
+        if (Util.css(pinTarget).position !== 'fixed') {
           // change state before updating pin spacer (position changes due to fixed collapsing might occur.)
-          _util.css(pinTarget, { position: 'fixed' });
+          pinTarget.style.position = 'fixed';
           // update pin spacer
           this._updatePinDimensions();
         }
 
-        const fixedPos = _util.get.offset(this._pinOptions.spacer, true); // get viewport position of spacer
+        const fixedPos = Util.offset(this._pinOptions.spacer, true); // get viewport position of spacer
         const scrollDistance = this.options.reverse || this.options.duration === 0 ?
           containerInfo.scrollPos - this._scrollOffset.start // quicker
           : Math.round(this._progress * this.options.duration * 10) / 10; // if no reverse and during pin the position needs to be recalculated using the progress
@@ -576,10 +578,9 @@ class Scene {
         fixedPos[containerInfo.vertical ? 'top' : 'left'] += scrollDistance;
 
         // set new values
-        _util.css(this._pinOptions.spacer.firstChild, {
-          top: fixedPos.top,
-          left: fixedPos.left,
-        });
+        this._pinOptions.spacer.firstChild.style.top = fixedPos.top;
+        this._pinOptions.spacer.firstChild.style.left = fixedPos.left;
+
       } else {
         // unpinned state
         const newCSS = {
@@ -587,19 +588,22 @@ class Scene {
           top: 0,
           left: 0,
         };
-        let change = _util.css(pinTarget, 'position') !== newCSS.position;
+
+        let change = Util.css(pinTarget).position !== newCSS.position;
 
         if (!this._pinOptions.pushFollowers) {
           newCSS[containerInfo.vertical ? 'top' : 'left'] = this.options.duration * this._progress;
         } else if (this.options.duration > 0) { // only concerns scenes with duration
-          if (this._state === SCENE_STATE_AFTER && parseFloat(_util.css(this._pinOptions.spacer, 'padding-top')) === 0) {
+          if (this._state === SCENE_STATE_AFTER && parseFloat(Util.css(this._pinOptions.spacer).paddingTop) === 0) {
             change = true; // if in after state but havent updated spacer yet (jumped past pin)
-          } else if (this._state === SCENE_STATE_BEFORE && parseFloat(_util.css(this._pinOptions.spacer, 'padding-bottom')) === 0) { // before
+          } else if (this._state === SCENE_STATE_BEFORE && parseFloat(Util.css(this._pinOptions.spacer).paddingBottom) === 0) { // before
             change = true; // jumped past fixed state upward direction
           }
         }
+
         // set new values
-        _util.css(pinTarget, newCSS);
+        Util.css(pinTarget, newCSS);
+
         if (change) {
           // update pin spacer if state changed
           this._updatePinDimensions();
@@ -612,37 +616,40 @@ class Scene {
     if (this._pin && this._controller && this._pinOptions.inFlow) {
       // no spacer resize, if original position is absolute
 
-      const after = (this._state === SCENE_STATE_AFTER);
-      const before = (this._state === SCENE_STATE_BEFORE);
       const during = (this._state === SCENE_STATE_DURING);
       const vertical = this._controller.info('vertical');
       const pinTarget = this._pinOptions.spacer.firstChild; // usually the pined element but can also be another spacer (cascaded pins)
-      const marginCollapse = _util.isMarginCollapseType(_util.css(this._pinOptions.spacer, 'display'));
+      const marginCollapse = Util.marginCollapse(Util.css(this._pinOptions.spacer).display);
+
       const css = {};
 
       // set new size
+
       // if relsize: spacer -> pin | else: pin -> spacer
       if (this._pinOptions.relSize.width || this._pinOptions.relSize.autoFullWidth) {
         if (during) {
-          _util.css(this._pin, { width: _util.get.width(this._pinOptions.spacer) });
+          this._pin.style.width = Util.width(this._pinOptions.spacer);
         } else {
-          _util.css(this._pin, { width: '100%' });
+          this._pin.style.width = '100%';
         }
+
       } else {
         // minwidth is needed for cascaded pins.
-        css['min-width'] = _util.get.width(vertical ? this._pin : pinTarget, true, true);
+        css['min-width'] = Util.width(vertical ? this._pin : pinTarget, true, true);
         css.width = during ? css['min-width'] : 'auto';
       }
+
       if (this._pinOptions.relSize.height) {
         if (during) {
           // the only padding the spacer should ever include is the duration (if pushFollowers = true), so we need to substract that.
-          _util.css(this._pin, { height: _util.get.height(this._pinOptions.spacer) - (this._pinOptions.pushFollowers ? this.options.duration : 0) });
+          Util.css(this._pin, { height: Util.height(this._pinOptions.spacer) - (this._pinOptions.pushFollowers ? this.options.duration : 0) });
         } else {
-          _util.css(this._pin, { height: '100%' });
+          Util.css(this._pin, { height: '100%' });
         }
+
       } else {
         // margin is only included if it's a cascaded pin to resolve an IE9 bug
-        css['min-height'] = _util.get.height(vertical ? pinTarget : this._pin, true, !marginCollapse); // needed for cascading pins
+        css['min-height'] = Util.height(vertical ? pinTarget : this._pin, true, !marginCollapse); // needed for cascading pins
         css.height = during ? css['min-height'] : 'auto';
       }
 
@@ -651,7 +658,8 @@ class Scene {
         css[`padding${vertical ? 'Top' : 'Left'}`] = this.options.duration * this._progress;
         css[`padding${vertical ? 'Bottom' : 'Right'}`] = this.options.duration * (1 - this._progress);
       }
-      _util.css(this._pinOptions.spacer, css);
+
+      Util.css(this._pinOptions.spacer, css);
     }
   }
 
@@ -665,8 +673,8 @@ class Scene {
     if (this._controller && this._pin &&
       this._state === SCENE_STATE_DURING && // element in pinned state?
       ( // is width or height relatively sized, but not in relation to body? then we need to recalc.
-        ((this._pinOptions.relSize.width || this._pinOptions.relSize.autoFullWidth) && _util.get.width(window) !== _util.get.width(this._pinOptions.spacer.parentNode)) ||
-        (this._pinOptions.relSize.height && _util.get.height(window) !== _util.get.height(this._pinOptions.spacer.parentNode))
+        ((this._pinOptions.relSize.width || this._pinOptions.relSize.autoFullWidth) && Util.width(window) !== Util.width(this._pinOptions.spacer.parentNode)) ||
+        (this._pinOptions.relSize.height && Util.height(window) !== Util.height(this._pinOptions.spacer.parentNode))
       )
     ) {
       this._updatePinDimensions();
@@ -685,15 +693,18 @@ class Scene {
       pushFollowers: true,
       spacerClass: 'scrollmagic-pin-spacer',
     };
-    settings = _util.extend({}, defaultSettings, settings);
 
-    // validate Element
-    element = _util.get.elements(element)[0];
+    settings = _.merge({}, defaultSettings, settings);
+
+    // validate element
+    element = Util.elements(element)[0];
+
     if (!element) {
-      _util.log(1, "ERROR calling method 'setPin()': Invalid pin element supplied.");
+      Log.log(1, "ERROR calling method 'setPin()': Invalid pin element supplied");
       return this; // cancel
-    } else if (_util.css(element, 'position') === 'fixed') {
-      _util.log(1, "ERROR calling method 'setPin()': Pin does not work with elements that are positioned 'fixed'.");
+
+    } else if (Util.css(element).position === 'fixed') {
+      Log.log(1, "ERROR calling method 'setPin()': Pin does not work with elements that are positioned 'fixed'");
       return this; // cancel
     }
 
@@ -707,31 +718,32 @@ class Scene {
     }
     this._pin = element;
 
-    const parentDisplay = this._pin.parentNode.style.display;
+    const parentDisplay = Util.css(this._pin.parentNode).display;
     const boundsParams = ['top', 'left', 'bottom', 'right', 'margin', 'marginLeft', 'marginRight', 'marginTop', 'marginBottom'];
 
     this._pin.parentNode.style.display = 'none'; // hack start to force css to return stylesheet values instead of calculated px values.
 
-    const inFlow = _util.css(this._pin, 'position') !== 'absolute';
-    const pinCSS = _util.css(this._pin, boundsParams.concat(['display']));
-    const sizeCSS = _util.css(this._pin, ['width', 'height']);
+    const inFlow = Util.css(this._pin).position !== 'absolute';
+    const pinCSS = _.pick(Util.css(this._pin), boundsParams.concat(['display']));
+    const sizeCSS = _.pick(Util.css(this._pin), ['width', 'height']);
+
     this._pin.parentNode.style.display = parentDisplay; // hack end.
 
     if (!inFlow && settings.pushFollowers) {
-      _util.log(2, 'WARNING: If the pinned element is positioned absolutely pushFollowers will be disabled.');
+      Log.log(2, 'WARNING: If the pinned element is positioned absolutely pushFollowers will be disabled.');
       settings.pushFollowers = false;
     }
 
     // wait until all finished, because with responsive duration it will only be set after scene is added to controller
     window.setTimeout(() => {
       if (this._pin && this.options.duration === 0 && settings.pushFollowers) {
-        _util.log(2, 'WARNING: pushFollowers =', true, 'has no effect, when scene duration is 0.');
+        Log.log(2, 'WARNING: pushFollowers =', true, 'has no effect, when scene duration is 0.');
       }
     }, 0);
 
     // create spacer and insert
     const spacer = this._pin.parentNode.insertBefore(document.createElement('div'), this._pin);
-    const spacerCSS = _util.extend(pinCSS, {
+    const spacerCSS = _.merge(pinCSS, {
       position: inFlow ? 'relative' : 'absolute',
       boxSizing: 'content-box',
       mozBoxSizing: 'content-box',
@@ -739,12 +751,12 @@ class Scene {
     });
 
     if (!inFlow) { // copy size if positioned absolutely, to work for bottom/right positioned elements.
-      _util.extend(spacerCSS, _util.css(this._pin, ['width', 'height']));
+      _.merge(spacerCSS, sizeCSS);
     }
 
-    _util.css(spacer, spacerCSS);
+    Util.css(spacer, spacerCSS);
     spacer.setAttribute(PIN_SPACER_ATTRIBUTE, '');
-    _util.addClass(spacer, settings.spacerClass);
+    spacer.classList.add(settings.spacerClass);
 
     // set the pin Options
     this._pinOptions = {
@@ -752,7 +764,7 @@ class Scene {
       relSize: { // save if size is defined using % values. if so, handle spacer resize differently...
         width: sizeCSS.width.slice(-1) === '%',
         height: sizeCSS.height.slice(-1) === '%',
-        autoFullWidth: sizeCSS.width === 'auto' && inFlow && _util.isMarginCollapseType(pinCSS.display),
+        autoFullWidth: sizeCSS.width === 'auto' && inFlow && Util.marginCollapse(pinCSS.display),
       },
       pushFollowers: settings.pushFollowers,
       inFlow, // stores if the element takes up space in the document flow
@@ -769,16 +781,16 @@ class Scene {
 
     // if relative size, transfer it to spacer and make pin calculate it...
     if (this._pinOptions.relSize.width) {
-      _util.css(spacer, { width: sizeCSS.width });
+      Util.css(spacer, { width: sizeCSS.width });
     }
     if (this._pinOptions.relSize.height) {
-      _util.css(spacer, { height: sizeCSS.height });
+      Util.css(spacer, { height: sizeCSS.height });
     }
 
     // now place the pin element inside the spacer
     spacer.appendChild(this._pin);
     // and set new css
-    _util.css(this._pin, {
+    Util.css(this._pin, {
       position: inFlow ? 'relative' : 'absolute',
       margin: 'auto',
       top: 'auto',
@@ -788,7 +800,7 @@ class Scene {
     });
 
     if (this._pinOptions.relSize.width || this._pinOptions.relSize.autoFullWidth) {
-      _util.css(this._pin, {
+      Util.css(this._pin, {
         boxSizing: 'border-box',
         mozBoxSizing: 'border-box',
         webkitBoxSizing: 'border-box',
@@ -803,7 +815,7 @@ class Scene {
     this._pin.addEventListener('mousewheel', this._onMousewheelOverPin.bind(this));
     this._pin.addEventListener('DOMMouseScroll', this._onMousewheelOverPin.bind(this));
 
-    _util.log(3, 'added pin');
+    Log.log(3, 'added pin');
 
     // finally update the pin to init
     this._updatePinState();
@@ -825,13 +837,13 @@ class Scene {
           values.forEach((val) => {
             margins[val] = style[val] || '';
           });
-          _util.css(pinTarget, margins);
+          Util.css(pinTarget, margins);
         }
         this._pinOptions.spacer.parentNode.insertBefore(pinTarget, this._pinOptions.spacer);
         this._pinOptions.spacer.parentNode.removeChild(this._pinOptions.spacer);
         if (!this._pin.parentNode.hasAttribute(PIN_SPACER_ATTRIBUTE)) { // if it's the last pin for this element -> restore inline styles
           // TODO: only correctly set for first pin (when cascading) - how to fix?
-          _util.css(this._pin, this._pin.___origStyle);
+          Util.css(this._pin, this._pin.___origStyle);
           delete this._pin.___origStyle;
         }
       }
@@ -842,7 +854,7 @@ class Scene {
       this._pin.removeEventListener('DOMMouseScroll', this._onMousewheelOverPin.bind(this));
       this._pin = null;
       this._pinOptions.spacer = null;
-      _util.log(3, `removed pin (reset: ${reset ? 'true' : 'false'})`);
+      Log.log(3, `removed pin (reset: ${reset ? 'true' : 'false'})`);
     }
     return this;
   }
@@ -850,9 +862,9 @@ class Scene {
   // class toggle
 
   setClassToggle(element, classes) {
-    const elems = _util.get.elements(element);
-    if (elems.length === 0 || !_util.type.String(classes)) {
-      _util.log(1, `ERROR calling method 'setClassToggle()': Invalid ${elems.length === 0 ? 'element' : 'classes'} supplied.`);
+    const els = Util.elements(element);
+    if (els.length === 0 || !_.isString(classes)) {
+      Log.log(1, `ERROR calling method 'setClassToggle()': Invalid ${els.length === 0 ? 'element' : 'classes'} supplied.`);
       return this;
     }
     if (this._cssClassElems.length > 0) {
@@ -860,11 +872,10 @@ class Scene {
       this.removeClassToggle();
     }
     this._cssClasses = classes;
-    this._cssClassElems = elems;
+    this._cssClassElems = els;
     this.on('enter.internal_class leave.internal_class', (event) => {
-      const toggle = event.type === 'enter' ? _util.addClass : _util.removeClass;
-      this._cssClassElems.forEach((elem, key) => {
-        toggle(elem, this._cssClasses);
+      this._cssClassElems.forEach((el) => {
+        el.classList[event.type === 'enter' ? 'add' : 'remove'](this._cssClasses);
       });
     });
     return this;
@@ -872,8 +883,8 @@ class Scene {
 
   removeClassToggle(reset) {
     if (reset) {
-      this._cssClassElems.forEach((elem, key) => {
-        _util.removeClass(elem, this._cssClasses);
+      this._cssClassElems.forEach((el) => {
+        el.classList.remove(this._cssClasses);
       });
     }
     this.off('start.internal_class end.internal_class');
@@ -936,7 +947,7 @@ class Scene {
       }
       newTween.pause();
     } catch (event) {
-      _util.log(1, "ERROR calling method 'setTween()': Supplied argument is not a valid TweenObject");
+      Log.log(1, "ERROR calling method 'setTween()': Supplied argument is not a valid TweenObject");
       return this;
     }
 
@@ -953,7 +964,7 @@ class Scene {
       this._tween.yoyo(TweenObject.yoyo());
     }
 
-    _util.log(3, 'added tween');
+    Log.log(3, 'added tween');
 
     this._updateTweenProgress();
 
@@ -967,7 +978,7 @@ class Scene {
       }
       this._tween.kill();
       this._tween = null;
-      _util.log(3, `removed tween (reset: ${reset ? 'true' : 'false'})`);
+      Log.log(3, `removed tween (reset: ${reset ? 'true' : 'false'})`);
     }
     return this;
   }
@@ -976,7 +987,7 @@ class Scene {
 
   addIndicators(options) {
     if (!this._indicator) {
-      options = _util.extend({}, DEFAULT_INDICATOR_OPTIONS, options);
+      options = _.merge({}, DEFAULT_INDICATOR_OPTIONS, options);
 
       this._indicator = new Indicator(this, options);
 

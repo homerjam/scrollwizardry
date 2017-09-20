@@ -14,6 +14,7 @@ module.exports = {
     'linebreak-style': 0,
     'prefer-rest-params': 1,
     'guard-for-in': 1,
+    'padded-blocks': 0,
     'no-plusplus': 0,
     'no-param-reassign': 0,
     'no-unused-vars': 1,

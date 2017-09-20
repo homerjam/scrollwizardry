@@ -1,7 +1,9 @@
 /* eslint-env browser */
 
-import _util from './_util';
+import _ from 'lodash';
+import Util from './Util';
 import Scene from './Scene';
+import Log from './Log';
 
 const PIN_SPACER_ATTRIBUTE = 'data-scrollmagic-pin-spacer';
 
@@ -24,14 +26,13 @@ const DEFAULT_CONTROLLER_OPTIONS = {
 
 class Controller {
   constructor(options) {
-    this.options = _util.extend({}, DEFAULT_CONTROLLER_OPTIONS, options);
+    this.options = _.merge({}, DEFAULT_CONTROLLER_OPTIONS, options);
 
-    this.options.container = _util.get.elements(this.options.container)[0];
+    this.options.container = Util.elements(this.options.container)[0];
 
-    // check scroll container
     if (!this.options.container) {
-      _util.log(1, `ERROR creating object ${NAMESPACE}: No valid scroll container supplied`);
-      throw Error(`${NAMESPACE} init failed.`); // cancel
+      Log.log(1, `ERROR creating object ${NAMESPACE}: No valid scroll container supplied`);
+      throw Error(`${NAMESPACE} init failed`);
     }
 
     this._isDocument = this.options.container === window || this.options.container === document.body || !document.body.contains(this.options.container);
@@ -39,7 +40,7 @@ class Controller {
     this._updateScenesOnNextCycle = false;
     this._scrollPos = 0;
     this._scrollDirection = SCROLL_DIRECTION_PAUSED;
-    this._viewPortSize = 0;
+    this._viewportSize = 0;
     this._enabled = true;
     this._updateTimeout = null;
     this._refreshTimeout = null;
@@ -50,14 +51,14 @@ class Controller {
     }
 
     // update container size immediately
-    this._viewPortSize = this._getViewportSize();
+    this._viewportSize = this._getViewportSize();
 
     // set event handlers
     this.options.container.addEventListener('resize', this._onChange.bind(this), { passive: true });
     this.options.container.addEventListener('scroll', this._onChange.bind(this), { passive: true });
 
     const ri = parseInt(this.options.refreshInterval, 10);
-    this.options.refreshInterval = _util.type.Number(ri) ? ri : DEFAULT_CONTROLLER_OPTIONS.refreshInterval;
+    this.options.refreshInterval = _.isNumber(ri) ? ri : DEFAULT_CONTROLLER_OPTIONS.refreshInterval;
     this._scheduleRefresh();
 
     // indicators
@@ -65,7 +66,7 @@ class Controller {
     this._container = this._info.container;
     this._isDocument = this._info.isDocument;
     this._vertical = this._info.vertical;
-    this._indicators = { // container for all indicators and methods
+    this._indicators = {
       groups: [],
     };
 
@@ -80,7 +81,7 @@ class Controller {
       this._container.addEventListener('scroll', this._handleBoundsPositionChange.bind(this), { passive: true });
     }
 
-    _util.log(3, `added new ${NAMESPACE}`);
+    Log.log(3, `added new ${NAMESPACE}`);
   }
 
   _scheduleRefresh() {
@@ -90,22 +91,22 @@ class Controller {
   }
 
   _getScrollPos() {
-    return this.options.vertical ? _util.get.scrollTop(this.options.container) : _util.get.scrollLeft(this.options.container);
+    return this.options.vertical ? Util.scrollTop(this.options.container) : Util.scrollLeft(this.options.container);
   }
 
   _getViewportSize() {
-    return this.options.vertical ? _util.get.height(this.options.container) : _util.get.width(this.options.container);
+    return this.options.vertical ? Util.height(this.options.container) : Util.width(this.options.container);
   }
 
   _setScrollPos(pos) {
     if (this.options.vertical) {
       if (this._isDocument) {
-        window.scrollTo(_util.get.scrollLeft(), pos);
+        window.scrollTo(Util.scrollLeft(), pos);
       } else {
         this.options.container.scrollTop = pos;
       }
     } else if (this._isDocument) {
-      window.scrollTo(pos, _util.get.scrollTop());
+      window.scrollTo(pos, Util.scrollTop());
     } else {
       this.options.container.scrollLeft = pos;
     }
@@ -114,7 +115,7 @@ class Controller {
   _updateScenes() {
     if (this._enabled && this._updateScenesOnNextCycle) {
       // determine scenes to update
-      const scenesToUpdate = _util.type.Array(this._updateScenesOnNextCycle) ? this._updateScenesOnNextCycle : this._sceneObjects.slice(0);
+      const scenesToUpdate = _.isArray(this._updateScenesOnNextCycle) ? this._updateScenesOnNextCycle : this._sceneObjects.slice(0);
 
       // reset scenes
       this._updateScenesOnNextCycle = false;
@@ -137,25 +138,25 @@ class Controller {
 
       // update scenes
       scenesToUpdate.forEach((scene, index) => {
-        _util.log(3, `updating scene ${index + 1}/${scenesToUpdate.length} (${this._sceneObjects.length} total)`);
+        Log.log(3, `updating scene ${index + 1}/${scenesToUpdate.length} (${this._sceneObjects.length} total)`);
         scene.update(true);
       });
 
       if (scenesToUpdate.length === 0 && this.options.loglevel >= 3) {
-        _util.log(3, 'updating 0 scenes (nothing added to controller)');
+        Log.log(3, 'updating 0 scenes (nothing added to controller)');
       }
     }
   }
 
   _debounceUpdate() {
-    this._updateTimeout = _util.rAF(this._updateScenes.bind(this));
+    this._updateTimeout = window.requestAnimationFrame(this._updateScenes.bind(this));
   }
 
   _onChange(event) {
-    _util.log(3, 'event fired causing an update:', event.type);
+    Log.log(3, 'event fired causing an update:', event.type);
     if (event.type === 'resize') {
       // resize
-      this._viewPortSize = this._getViewportSize();
+      this._viewportSize = this._getViewportSize();
       this._scrollDirection = SCROLL_DIRECTION_PAUSED;
     }
     // schedule update
@@ -168,7 +169,7 @@ class Controller {
   _refresh() {
     if (!this._isDocument) {
       // simulate resize event, only works for viewport relevant param (performance)
-      if (this._viewPortSize !== this._getViewportSize()) {
+      if (this._viewportSize !== this._getViewportSize()) {
         let resizeEvent;
         try {
           resizeEvent = new Event('resize', { bubbles: false, cancelable: false });
@@ -198,30 +199,34 @@ class Controller {
   }
 
   addScene(newScene) {
-    if (_util.type.Array(newScene)) {
-      newScene.forEach((scene, index) => {
+    if (_.isArray(newScene)) {
+      newScene.forEach((scene) => {
         this.addScene(scene);
       });
+
     } else if (newScene.controller() !== this) {
       newScene.addTo(this);
-    } else if (this._sceneObjects.indexOf(newScene) < 0) {
-      // new scene
-      this._sceneObjects.push(newScene); // add to array
-      this._sceneObjects = this._sortScenes(this._sceneObjects); // sort
+
+    } else if (!this._sceneObjects.includes(newScene)) {
+      this._sceneObjects.push(newScene);
+
+      this._sceneObjects = this._sortScenes(this._sceneObjects);
+
       newScene.on('shift.controller_sort', () => { // resort whenever scene moves
         this._sceneObjects = this._sortScenes(this._sceneObjects);
       });
-      // insert global defaults.
-      for (const key in this.options.globalSceneOptions) {
+
+      // insert global defaults
+      Object.keys(this.options.globalSceneOptions).forEach((key) => {
         if (newScene[key]) {
           newScene[key].call(newScene, this.options.globalSceneOptions[key]);
         }
-      }
-      _util.log(3, `adding Scene (now ${this._sceneObjects.length} total)`);
+      });
+
+      Log.log(3, `adding Scene (now ${this._sceneObjects.length} total)`);
     }
 
     // indicators
-
     if (this.options.addIndicators) {
       if (newScene instanceof Scene && newScene.controller() === this) {
         newScene.addIndicators();
@@ -232,16 +237,21 @@ class Controller {
   }
 
   removeScene(scene) {
-    if (_util.type.Array(scene)) {
-      scene.forEach((_scene, index) => {
+    if (_.isArray(scene)) {
+      scene.forEach((_scene) => {
         this.removeScene(_scene);
       });
+
     } else {
       const index = this._sceneObjects.indexOf(scene);
+
       if (index > -1) {
         scene.off('shift.controller_sort');
+
         this._sceneObjects.splice(index, 1);
-        _util.log(3, `removing Scene (now ${this._sceneObjects.length} left)`);
+
+        Log.log(3, `removing Scene (now ${this._sceneObjects.length} left)`);
+
         scene.remove();
       }
     }
@@ -249,10 +259,11 @@ class Controller {
   }
 
   updateScene(scene, immediately) {
-    if (_util.type.Array(scene)) {
-      scene.forEach((_scene, index) => {
+    if (_.isArray(scene)) {
+      scene.forEach((_scene) => {
         this.updateScene(_scene, immediately);
       });
+
     } else if (immediately) {
       scene.update(true);
 
@@ -260,10 +271,13 @@ class Controller {
     } else if (this._updateScenesOnNextCycle !== true) {
       // prep array for next update cycle
       this._updateScenesOnNextCycle = this._updateScenesOnNextCycle || [];
+
       if (this._updateScenesOnNextCycle.indexOf(scene) === -1) {
         this._updateScenesOnNextCycle.push(scene);
       }
-      this._updateScenesOnNextCycle = this._sortScenes(this._updateScenesOnNextCycle); // sort
+
+      this._updateScenesOnNextCycle = this._sortScenes(this._updateScenesOnNextCycle);
+
       this._debounceUpdate();
     }
     return this;
@@ -271,59 +285,64 @@ class Controller {
 
   update(immediately) {
     this._onChange({ type: 'resize' }); // will update size and set _updateScenesOnNextCycle to true
+
     if (immediately) {
       this._updateScenes();
     }
+
     return this;
   }
 
   scrollTo(scrollTarget, additionalParameter) {
-    if (_util.type.Number(scrollTarget)) { // excecute
+    if (_.isNumber(scrollTarget)) {
       this._setScrollPos.call(this.options.container, scrollTarget, additionalParameter);
-    } else if (_util.type.Function(scrollTarget)) { // assign new scroll function
+
+    } else if (_.isFunction(scrollTarget)) {
       this._setScrollPos = scrollTarget;
-    } else if (scrollTarget instanceof HTMLElement) { // scroll to element
-      let elem = _util.get.elements(scrollTarget)[0];
-      if (elem) {
-        // if parent is pin spacer, use spacer position instead so correct start position is returned for pinned elements.
-        while (elem.parentNode.hasAttribute(PIN_SPACER_ATTRIBUTE)) {
-          elem = elem.parentNode;
-        }
 
-        // which param is of interest ?
-        const param = this.options.vertical ? 'top' : 'left';
-
-        // container position is needed because element offset is returned in relation to document, not in relation to container.
-        const containerOffset = _util.get.offset(this.options.container);
-
-        const elementOffset = _util.get.offset(elem);
-
-        if (!this._isDocument) { // container is not the document root, so substract scroll Position to get correct trigger element position relative to scrollcontent
-          containerOffset[param] -= this.scrollPos();
-        }
-
-        this.scrollTo(elementOffset[param] - containerOffset[param], additionalParameter);
-      } else {
-        _util.log(2, 'scrollTo(): The supplied argument is invalid. Scroll cancelled.', scrollTarget);
+    } else if (_.isElement(scrollTarget)) {
+      // if parent is pin spacer, use spacer position instead
+      // so correct start position is returned for pinned elements
+      while (scrollTarget.parentNode.hasAttribute(PIN_SPACER_ATTRIBUTE)) {
+        scrollTarget = scrollTarget.parentNode;
       }
-    } else if (scrollTarget instanceof Scene) { // scroll to scene
-      if (scrollTarget.controller() === this) { // check if the controller is associated with this scene
+
+      const offset = this.options.vertical ? 'top' : 'left';
+
+      // container position is needed because element offset is returned in relation to document
+      // not in relation to container
+      const containerOffset = Util.offset(this.options.container);
+
+      const elementOffset = Util.offset(scrollTarget);
+
+      if (!this._isDocument) {
+        // container is not the document root, so substract scroll position
+        // to get correct trigger element position relative to scroll content
+        containerOffset[offset] -= this.scrollPos();
+      }
+
+      this.scrollTo(elementOffset[offset] - containerOffset[offset], additionalParameter);
+
+    } else if (scrollTarget instanceof Scene) {
+      if (scrollTarget.controller() === this) {
         this.scrollTo(scrollTarget.scrollOffset(), additionalParameter);
       } else {
-        _util.log(2, 'scrollTo(): The supplied scene does not belong to this controller. Scroll cancelled.', scrollTarget);
+        Log.log(2, 'scrollTo(): The supplied scene does not belong to this controller, scroll cancelled', scrollTarget);
       }
     }
+
     return this;
   }
 
   scrollPos(scrollPosMethod) {
-    if (!arguments.length) { // get
+    if (!arguments.length) {
       return this._getScrollPos.call(this);
-    } // set
-    if (_util.type.Function(scrollPosMethod)) {
+    }
+
+    if (_.isFunction(scrollPosMethod)) {
       this._getScrollPos = scrollPosMethod;
     } else {
-      _util.log(2, "Provided value for method 'scrollPos' is not a function. To change the current scroll position use 'scrollTo()'.");
+      Log.log(2, 'Provided value for method \'scrollPos()\' is not a function, to change the current scroll position use \'scrollTo()\'');
     }
 
     return this;
@@ -331,56 +350,58 @@ class Controller {
 
   info(about) {
     const values = {
-      size: this._viewPortSize, // contains height or width (in regard to orientation)
+      size: this._viewportSize,
       vertical: this.options.vertical,
       scrollPos: this._scrollPos,
       scrollDirection: this._scrollDirection,
       container: this.options.container,
       isDocument: this._isDocument,
     };
+
     if (values[about] !== undefined) {
       return values[about];
     }
+
     return values;
   }
 
   loglevel(newLoglevel) {
-    if (!arguments.length) { // get
+    if (!arguments.length) {
       return this.options.loglevel;
-    } else if (this.options.loglevel !== newLoglevel) { // set
+
+    } else if (this.options.loglevel !== newLoglevel) {
       this.options.loglevel = newLoglevel;
     }
+
     return this;
   }
 
   enabled(newState) {
-    if (!arguments.length) { // get
+    if (!arguments.length) {
       return this._enabled;
-    } else if (this._enabled !== newState) { // set
+
+    } else if (this._enabled !== newState) {
       this._enabled = !!newState;
+
       this.updateScene(this._sceneObjects, true);
     }
+
     return this;
   }
 
   destroy(resetScenes) {
     window.clearTimeout(this._refreshTimeout);
 
-    let i = this._sceneObjects.length;
-
-    while (i--) {
-      this._sceneObjects[i].destroy(resetScenes);
-    }
+    this._sceneObjects.forEach(scene => scene.destroy(resetScenes));
 
     this.options.container.removeEventListener('resize', this._onChange.bind(this), { passive: true });
     this.options.container.removeEventListener('scroll', this._onChange.bind(this), { passive: true });
 
-    _util.cAF(this._updateTimeout);
+    window.cancelAnimationFrame(this._updateTimeout);
 
-    _util.log(3, `destroyed ${NAMESPACE} (reset: ${resetScenes ? 'true' : 'false'})`);
+    Log.log(3, `destroyed ${NAMESPACE} (reset: ${resetScenes ? 'true' : 'false'})`);
 
     // indicators
-
     if (this.options.addIndicators) {
       this._container.removeEventListener('resize', this._handleTriggerPositionChange.bind(this), { passive: true });
       if (!this._isDocument) {
@@ -416,25 +437,25 @@ class Controller {
   updateBoundsPositions(specificIndicator) {
     // constant for all bounds
     const groups = specificIndicator ?
-      [_util.extend({}, specificIndicator.triggerGroup, { members: [specificIndicator] })] : // create a group with only one element
+      [_.merge({}, specificIndicator.triggerGroup, { members: [specificIndicator] })] : // create a group with only one element
       this._indicators.groups; // use all
-    let g = groups.length;
-    const css = {};
-    const paramPos = this._vertical ? 'left' : 'top';
-    const paramDimension = this._vertical ? 'width' : 'height';
+    let groupsCount = groups.length;
+    const pos = this._vertical ? 'left' : 'top';
+    const dimension = this._vertical ? 'width' : 'height';
     const edge = this._vertical ?
-      _util.get.scrollLeft(this._container) + _util.get.width(this._container) - EDGE_OFFSET :
-      _util.get.scrollTop(this._container) + _util.get.height(this._container) - EDGE_OFFSET;
-    let b;
+      Util.scrollLeft(this._container) + (Util.width(this._container) - EDGE_OFFSET) :
+      Util.scrollTop(this._container) + (Util.height(this._container) - EDGE_OFFSET);
+    let boundsCount;
     let triggerSize;
     let group;
-    while (g--) { // group loop
-      group = groups[g];
-      b = group.members.length;
-      triggerSize = _util.get[paramDimension](group.element.firstChild);
-      while (b--) { // indicators loop
-        css[paramPos] = edge - triggerSize;
-        _util.css(group.members[b].bounds, css);
+
+    while (groupsCount--) { // group loop
+      group = groups[groupsCount];
+      boundsCount = group.members.length;
+      triggerSize = Util[dimension](group.element.firstChild);
+
+      while (boundsCount--) { // indicators loop
+        group.members[boundsCount].bounds.style[pos] = edge - triggerSize;
       }
     }
   }
@@ -445,34 +466,29 @@ class Controller {
     const groups = specificGroup ? [specificGroup] : this._indicators.groups;
     let i = groups.length;
     const container = this._isDocument ? document.body : this._container;
-    const containerOffset = this._isDocument ? { top: 0, left: 0 } : _util.get.offset(container, true);
+    const containerOffset = this._isDocument ? { top: 0, left: 0 } : Util.offset(container, true);
     const edge = this._vertical ?
-      _util.get.width(this._container) - EDGE_OFFSET :
-      _util.get.height(this._container) - EDGE_OFFSET;
-    const paramDimension = this._vertical ? 'width' : 'height';
-    const paramTransform = this._vertical ? 'Y' : 'X';
+      Util.width(this._container) - EDGE_OFFSET :
+      Util.height(this._container) - EDGE_OFFSET;
+    const dimension = this._vertical ? 'width' : 'height';
+    const transformAxis = this._vertical ? 'Y' : 'X';
     // changing vars
     let group;
-    let elem;
+    let el;
     let pos;
-    let elemSize;
+    let elSize;
     let transform;
     while (i--) {
       group = groups[i];
-      elem = group.element;
+      el = group.element;
       pos = group.triggerHook * this.info('size');
-      elemSize = _util.get[paramDimension](elem.firstChild.firstChild);
-      transform = pos > elemSize ? `translate${paramTransform}(-100%)` : '';
+      elSize = Util[dimension](el.firstChild.firstChild);
+      transform = pos > elSize ? `translate${transformAxis}(-100%)` : '';
 
-      _util.css(elem, {
-        top: containerOffset.top + (this._vertical ? pos : edge - group.members[0].options.indent),
-        left: containerOffset.left + (this._vertical ? edge - group.members[0].options.indent : pos),
-      });
-      _util.css(elem.firstChild.firstChild, {
-        '-ms-transform': transform,
-        '-webkit-transform': transform,
-        transform,
-      });
+      el.style.top = containerOffset.top + (this._vertical ? pos : edge - group.members[0].options.indent);
+      el.style.left = containerOffset.left + (this._vertical ? edge - group.members[0].options.indent : pos);
+
+      el.firstChild.firstChild.style.transform = transform;
     }
   }
 

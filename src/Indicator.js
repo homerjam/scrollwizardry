@@ -1,6 +1,7 @@
 /* eslint-env browser */
 
-import _util from './_util';
+import Util from './Util';
+import Log from './Log';
 
 const FONT_SIZE = '0.85em';
 const ZINDEX = '9999';
@@ -10,7 +11,7 @@ const TPL = {
     // inner element (for bottom offset -1, while keeping top position 0)
     const inner = document.createElement('div');
     inner.textContent = 'start';
-    _util.css(inner, {
+    Util.css(inner, {
       position: 'absolute',
       overflow: 'visible',
       'border-width': 0,
@@ -20,7 +21,7 @@ const TPL = {
     });
     const element = document.createElement('div');
     // wrapper
-    _util.css(element, {
+    Util.css(element, {
       position: 'absolute',
       overflow: 'visible',
       width: 0,
@@ -32,7 +33,7 @@ const TPL = {
   end(color) {
     const element = document.createElement('div');
     element.textContent = 'end';
-    _util.css(element, {
+    Util.css(element, {
       position: 'absolute',
       overflow: 'visible',
       'border-width': 0,
@@ -44,7 +45,7 @@ const TPL = {
   },
   bounds() {
     const element = document.createElement('div');
-    _util.css(element, {
+    Util.css(element, {
       position: 'absolute',
       overflow: 'visible',
       'white-space': 'nowrap',
@@ -58,12 +59,12 @@ const TPL = {
     // inner to be above or below line but keep position
     const inner = document.createElement('div');
     inner.textContent = 'trigger';
-    _util.css(inner, {
+    Util.css(inner, {
       position: 'relative',
     });
     // wrapper for right: 0 and main element has no size
     const wrapper = document.createElement('div');
-    _util.css(wrapper, {
+    Util.css(wrapper, {
       position: 'absolute',
       overflow: 'visible',
       'border-width': 0,
@@ -74,7 +75,7 @@ const TPL = {
     wrapper.appendChild(inner);
     // element
     const element = document.createElement('div');
-    _util.css(element, {
+    Util.css(element, {
       position: 'fixed',
       overflow: 'visible',
       'white-space': 'nowrap',
@@ -99,7 +100,7 @@ class Indicator {
     this._elemStart = TPL.start(options.colorStart);
     this._elemEnd = TPL.end(options.colorEnd);
 
-    this._boundsContainer = options.parent && _util.get.elements(options.parent)[0];
+    this._boundsContainer = options.parent && Util.elements(options.parent)[0];
 
     // prepare bounds elements
     this._elemStart.firstChild.textContent += ` ${options.name}`;
@@ -129,9 +130,9 @@ class Indicator {
       // no parent supplied or doesnt exist
       this._boundsContainer = isDocument ? document.body : this._ctrl.info('container'); // check if window/document (then use body)
     }
-    if (!isDocument && _util.css(this._boundsContainer, 'position') === 'static') {
+    if (!isDocument && Util.css(this._boundsContainer).position === 'static') {
       // position mode needed for correct positioning of indicators
-      _util.css(this._boundsContainer, { position: 'relative' });
+      Util.css(this._boundsContainer, { position: 'relative' });
     }
 
     // add listeners for updates
@@ -146,7 +147,7 @@ class Indicator {
       this._ctrl.updateBoundsPositions(this);
     }, 0);
 
-    _util.log(3, 'added indicators');
+    Log.log(3, 'added indicators');
   }
 
   // remove indicators from DOM
@@ -168,7 +169,7 @@ class Indicator {
       }
       this._removeBounds();
 
-      _util.log(3, 'removed indicators');
+      Log.log(3, 'removed indicators');
     }
   }
 
@@ -188,14 +189,14 @@ class Indicator {
   _addBounds() {
     const v = this._ctrl.info('vertical');
     // apply stuff we didn't know before...
-    _util.css(this._elemStart.firstChild, {
+    Util.css(this._elemStart.firstChild, {
       'border-bottom-width': v ? 1 : 0,
       'border-right-width': v ? 0 : 1,
       bottom: v ? -1 : this.options.indent,
       right: v ? this.options.indent : -1,
       padding: v ? '0 8px' : '2px 4px',
     });
-    _util.css(this._elemEnd, {
+    Util.css(this._elemEnd, {
       'border-top-width': v ? 1 : 0,
       'border-left-width': v ? 0 : 1,
       top: v ? '100%' : '',
@@ -221,8 +222,8 @@ class Indicator {
     const css = {};
     css[this._vertical ? 'top' : 'left'] = this.scene.triggerPosition();
     css[this._vertical ? 'height' : 'width'] = this.scene.duration();
-    _util.css(this._elemBounds, css);
-    _util.css(this._elemEnd, {
+    Util.css(this._elemBounds, css);
+    Util.css(this._elemEnd, {
       display: this.scene.duration() > 0 ? '' : 'none',
     });
   }
@@ -233,8 +234,8 @@ class Indicator {
     const css = {};
     css[this._vertical ? 'right' : 'bottom'] = 0;
     css[this._vertical ? 'border-top-width' : 'border-left-width'] = 1;
-    _util.css(triggerElem.firstChild, css);
-    _util.css(triggerElem.firstChild.firstChild, {
+    Util.css(triggerElem.firstChild, css);
+    Util.css(triggerElem.firstChild.firstChild, {
       padding: this._vertical ? '0 8px 3px 8px' : '3px 4px',
     });
     document.body.appendChild(triggerElem); // directly add to body
@@ -264,13 +265,13 @@ class Indicator {
     // Have a group, check if it still matches
     if (this.triggerGroup) {
       if (Math.abs(this.triggerGroup.triggerHook - triggerHook) < closeEnough) {
-        // _util.log(0, "trigger", options.name, "->", "no need to change, still in sync");
+        // Log.log(0, "trigger", options.name, "->", "no need to change, still in sync");
         return; // all good
       }
     }
 
     // Don't have a group, check if a matching one exists
-    // _util.log(0, "trigger", options.name, "->", "out of sync!");
+    // Log.log(0, "trigger", options.name, "->", "out of sync!");
     const groups = this._ctrl._indicators.groups;
     let group;
     let i = groups.length;
@@ -279,17 +280,17 @@ class Indicator {
       group = groups[i];
       if (Math.abs(group.triggerHook - triggerHook) < closeEnough) {
         // found a match!
-        // _util.log(0, "trigger", options.name, "->", "found match");
+        // Log.log(0, "trigger", options.name, "->", "found match");
         if (this.triggerGroup) { // do I have an old group that is out of sync?
           if (this.triggerGroup.members.length === 1) { // is it the only remaining group?
-            // _util.log(0, "trigger", options.name, "->", "kill");
+            // Log.log(0, "trigger", options.name, "->", "kill");
             // was the last member, remove the whole group
             this._removeTriggerGroup();
           } else {
             this.triggerGroup.members.splice(this.triggerGroup.members.indexOf(this), 1); // just remove from memberlist of old group
             this._ctrl.updateTriggerGroupLabel(this.triggerGroup);
             this._ctrl.updateTriggerGroupPositions(this.triggerGroup);
-            // _util.log(0, "trigger", options.name, "->", "removing from previous member list");
+            // Log.log(0, "trigger", options.name, "->", "removing from previous member list");
           }
         }
         // join new group
@@ -303,19 +304,19 @@ class Indicator {
     // at this point I am obviously out of sync and don't match any other group
     if (this.triggerGroup) {
       if (this.triggerGroup.members.length === 1) {
-        // _util.log(0, "trigger", options.name, "->", "updating existing");
+        // Log.log(0, "trigger", options.name, "->", "updating existing");
         // out of sync but i'm the only member => just change and update
         this.triggerGroup.triggerHook = triggerHook;
         this._ctrl.updateTriggerGroupPositions(this.triggerGroup);
         return;
       }
-      // _util.log(0, "trigger", options.name, "->", "removing from previous member list");
+      // Log.log(0, "trigger", options.name, "->", "removing from previous member list");
       this.triggerGroup.members.splice(this.triggerGroup.members.indexOf(this), 1); // just remove from memberlist of old group
       this._ctrl.updateTriggerGroupLabel(this.triggerGroup);
       this._ctrl.updateTriggerGroupPositions(this.triggerGroup);
       this.triggerGroup = null; // need a brand new group...
     }
-    // _util.log(0, "trigger", options.name, "->", "add a new one");
+    // Log.log(0, "trigger", options.name, "->", "add a new one");
     // did not find any match, make new trigger group
     this._addTriggerGroup();
   }

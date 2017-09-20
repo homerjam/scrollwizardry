@@ -13,4 +13,8 @@ export default {
       exclude: 'node_modules/**',
     }),
   ],
+  external: ['lodash'],
+  globals: {
+    lodash: '_',
+  },
 };

@@ -12,14 +12,14 @@ let i;
    * ------------------------------
    */
 
-const _type = v => Object.prototype.toString.call(v).replace(/^\[object (.+)\]$/, '$1').toLowerCase();
-_type.String = v => _type(v) === 'string';
-_type.Function = v => _type(v) === 'function';
-_type.Array = v => Array.isArray(v);
-_type.Number = v => !_type.Array(v) && (v - parseFloat(v) + 1) >= 0;
-_type.DomElement = o => (typeof HTMLElement === 'object' || typeof HTMLElement === 'function' ? o instanceof HTMLElement || o instanceof SVGElement : // DOM2
-  o && typeof o === 'object' && o !== null && o.nodeType === 1 && typeof o.nodeName === 'string');
-U.type = _type;
+// const _type = v => Object.prototype.toString.call(v).replace(/^\[object (.+)\]$/, '$1').toLowerCase();
+// _type.String = v => _type(v) === 'string';
+// _type.Function = v => _type(v) === 'function';
+// _type.Array = v => Array.isArray(v);
+// _type.Number = v => !_type.Array(v) && (v - parseFloat(v) + 1) >= 0;
+// _type.DomElement = o => (typeof HTMLElement === 'object' || typeof HTMLElement === 'function' ? o instanceof HTMLElement || o instanceof SVGElement : // DOM2
+//   o && typeof o === 'object' && o !== null && o.nodeType === 1 && typeof o.nodeName === 'string');
+// U.type = _type;
 
 /**
    * ------------------------------
@@ -28,27 +28,27 @@ U.type = _type;
    */
 
 // get current style IE safe (otherwise IE would return calculated values for 'auto')
-const _getComputedStyle = elem => (elem.currentStyle ? elem.currentStyle : window.getComputedStyle(elem));
+// const _getComputedStyle = elem => (elem.currentStyle ? elem.currentStyle : window.getComputedStyle(elem));
 
 // get element dimension (width or height)
-const _dimension = (which, elem, outer, includeMargin) => {
-  elem = (elem === document) ? window : elem;
-  if (elem === window) {
-    includeMargin = false;
-  } else if (!_type.DomElement(elem)) {
-    return 0;
-  }
-  which = which.charAt(0).toUpperCase() + which.substr(1).toLowerCase();
-  let dimension = (outer ? elem[`offset${which}`] || elem[`outer${which}`] : elem[`client${which}`] || elem[`inner${which}`]) || 0;
-  if (outer && includeMargin) {
-    const style = _getComputedStyle(elem);
-    dimension += which === 'Height' ? U.floatVal(style.marginTop) + U.floatVal(style.marginBottom) : U.floatVal(style.marginLeft) + U.floatVal(style.marginRight);
-  }
-  return dimension;
-};
+// const _dimension = (which, elem, outer, includeMargin) => {
+//   elem = (elem === document) ? window : elem;
+//   if (elem === window) {
+//     includeMargin = false;
+//   } else if (!_type.DomElement(elem)) {
+//     return 0;
+//   }
+//   which = which.charAt(0).toUpperCase() + which.substr(1).toLowerCase();
+//   let dimension = (outer ? elem[`offset${which}`] || elem[`outer${which}`] : elem[`client${which}`] || elem[`inner${which}`]) || 0;
+//   if (outer && includeMargin) {
+//     const style = _getComputedStyle(elem);
+//     dimension += which === 'Height' ? U.floatVal(style.marginTop) + U.floatVal(style.marginBottom) : U.floatVal(style.marginLeft) + U.floatVal(style.marginRight);
+//   }
+//   return dimension;
+// };
 
   // converts 'margin-top' into 'marginTop'
-const _camelCase = str => str.replace(/^[^a-z]+([a-z])/g, '$1').replace(/-([a-z])/g, g => g[1].toUpperCase());
+// const _camelCase = str => str.replace(/^[^a-z]+([a-z])/g, '$1').replace(/-([a-z])/g, g => g[1].toUpperCase());
 
 /**
    * ------------------------------
@@ -57,23 +57,23 @@ const _camelCase = str => str.replace(/^[^a-z]+([a-z])/g, '$1').replace(/-([a-z]
    */
 
 // parse float and fall back to 0.
-U.floatVal = number => parseFloat(number) || 0;
+// U.floatVal = number => parseFloat(number) || 0;
 
 // extend obj – same as jQuery.extend({}, objA, objB)
-U.extend = function (obj) {
-  obj = obj || {};
-  for (i = 1; i < arguments.length; i++) {
-    if (!arguments[i]) {
-      continue;
-    }
-    for (const key in arguments[i]) {
-      if (arguments[i].hasOwnProperty(key)) {
-        obj[key] = arguments[i][key];
-      }
-    }
-  }
-  return obj;
-};
+// U.extend = function (obj) {
+//   obj = obj || {};
+//   for (i = 1; i < arguments.length; i++) {
+//     if (!arguments[i]) {
+//       continue;
+//     }
+//     for (const key in arguments[i]) {
+//       if (arguments[i].hasOwnProperty(key)) {
+//         obj[key] = arguments[i][key];
+//       }
+//     }
+//   }
+//   return obj;
+// };
 
 // check if a css display type results in margin-collapse or not
 U.isMarginCollapseType = str => ['block', 'flex', 'list-item', 'table', '-webkit-box'].indexOf(str) > -1;
@@ -110,8 +110,8 @@ if (!_cancelAnimationFrame) {
   };
 }
 
-U.rAF = _requestAnimationFrame.bind(window);
-U.cAF = _cancelAnimationFrame.bind(window);
+// U.rAF = _requestAnimationFrame.bind(window);
+// U.cAF = _cancelAnimationFrame.bind(window);
 
 const loglevels = ['error', 'warn', 'log'];
 
@@ -127,19 +127,19 @@ for (i = 0; i < loglevels.length; i++) {
   }
 }
 
-U.log = function (loglevel) {
-  if (!DEBUG) {
-    return;
-  }
-  if (loglevel > loglevels.length || loglevel <= 0) loglevel = loglevels.length;
-  const now = new Date();
-  const time = `${(`0${now.getHours()}`).slice(-2)}:${(`0${now.getMinutes()}`).slice(-2)}:${(`0${now.getSeconds()}`).slice(-2)}:${(`00${now.getMilliseconds()}`).slice(-3)}`;
-  const method = loglevels[loglevel - 1];
-  const args = Array.prototype.splice.call(arguments, 1);
-  const func = Function.prototype.bind.call(console[method], console);
-  args.unshift(time);
-  func.apply(console, args);
-};
+// U.log = function (loglevel) {
+//   if (!DEBUG) {
+//     return;
+//   }
+//   if (loglevel > loglevels.length || loglevel <= 0) loglevel = loglevels.length;
+//   const now = new Date();
+//   const time = `${(`0${now.getHours()}`).slice(-2)}:${(`0${now.getMinutes()}`).slice(-2)}:${(`0${now.getSeconds()}`).slice(-2)}:${(`00${now.getMilliseconds()}`).slice(-3)}`;
+//   const method = loglevels[loglevel - 1];
+//   const args = Array.prototype.splice.call(arguments, 1);
+//   const func = Function.prototype.bind.call(console[method], console);
+//   args.unshift(time);
+//   func.apply(console, args);
+// };
 
 /**
    * ------------------------------
@@ -198,39 +198,39 @@ U.get = _get;
    * ------------------------------
    */
 
-U.addClass = (elem, classname) => {
-  if (classname) {
-    if (elem.classList) { elem.classList.add(classname); } else { elem.className += ` ${classname}`; }
-  }
-};
+// U.addClass = (elem, classname) => {
+//   if (classname) {
+//     if (elem.classList) { elem.classList.add(classname); } else { elem.className += ` ${classname}`; }
+//   }
+// };
 
-U.removeClass = (elem, classname) => {
-  if (classname) {
-    if (elem.classList) { elem.classList.remove(classname); } else { elem.className = elem.className.replace(new RegExp(`(^|\\b)${classname.split(' ').join('|')}(\\b|$)`, 'gi'), ' '); }
-  }
-};
+// U.removeClass = (elem, classname) => {
+//   if (classname) {
+//     if (elem.classList) { elem.classList.remove(classname); } else { elem.className = elem.className.replace(new RegExp(`(^|\\b)${classname.split(' ').join('|')}(\\b|$)`, 'gi'), ' '); }
+//   }
+// };
 
 // if options is string -> returns css value
 // if options is array -> returns object with css value pairs
 // if options is object -> set new css values
-U.css = (elem, options) => {
-  if (_type.String(options)) {
-    return _getComputedStyle(elem)[_camelCase(options)];
-  } else if (_type.Array(options)) {
-    const obj = {};
-    const style = _getComputedStyle(elem);
-    options.forEach((option, key) => {
-      obj[option] = style[_camelCase(option)];
-    });
-    return obj;
-  }
-  for (const option in options) {
-    let val = options[option];
-    if (val === parseFloat(val)) { // assume pixel for seemingly numerical values
-      val += 'px';
-    }
-    elem.style[_camelCase(option)] = val;
-  }
-};
+// U.css = (elem, options) => {
+//   if (_type.String(options)) {
+//     return _getComputedStyle(elem)[_camelCase(options)];
+//   } else if (_type.Array(options)) {
+//     const obj = {};
+//     const style = _getComputedStyle(elem);
+//     options.forEach((option, key) => {
+//       obj[option] = style[_camelCase(option)];
+//     });
+//     return obj;
+//   }
+//   for (const option in options) {
+//     let val = options[option];
+//     if (val === parseFloat(val)) { // assume pixel for seemingly numerical values
+//       val += 'px';
+//     }
+//     elem.style[_camelCase(option)] = val;
+//   }
+// };
 
 export default U;
