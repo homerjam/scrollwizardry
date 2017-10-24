@@ -5,7 +5,7 @@ import Util from './Util';
 import Scene from './Scene';
 import Log from './Log';
 
-const PIN_SPACER_ATTRIBUTE = 'data-scrollmagic-pin-spacer';
+const PIN_SPACER_ATTRIBUTE = 'data-scrollwizardry-pin-spacer';
 
 const NAMESPACE = 'ScrollWizardry.Controller';
 

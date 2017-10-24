@@ -6,7 +6,7 @@ import Event from './Event';
 import Indicator from './Indicator';
 import Log from './Log';
 
-const PIN_SPACER_ATTRIBUTE = 'data-scrollmagic-pin-spacer';
+const PIN_SPACER_ATTRIBUTE = 'data-scrollwizardry-pin-spacer';
 
 const NAMESPACE = 'ScrollWizardry.Scene';
 
@@ -17,18 +17,18 @@ const SCENE_STATE_AFTER = 'AFTER';
 // list of options that trigger a `shift` event
 const SHIFTS = ['duration', 'offset', 'triggerHook'];
 
+const DEFAULT_SCENE_OPTIONS = {
+  duration: 0,
+  offset: 0,
+  triggerElement: undefined,
+  triggerHook: 0.5,
+  reverse: true,
+  loglevel: 2,
+  tweenChanges: false,
+};
+
 class Scene {
   constructor(options) {
-    const DEFAULT_SCENE_OPTIONS = {
-      duration: 0,
-      offset: 0,
-      triggerElement: undefined,
-      triggerHook: 0.5,
-      reverse: true,
-      loglevel: 2,
-      tweenChanges: false,
-    };
-
     this.options = _.merge({}, DEFAULT_SCENE_OPTIONS, options);
 
     this._state = SCENE_STATE_BEFORE;
@@ -59,9 +59,7 @@ class Scene {
         if (_.isString(val) && val.match(/^(\.|\d)*\d+%$/)) {
         // percentage value
           const perc = parseFloat(val) / 100;
-          val = () => {
-            return this._controller ? this._controller.info('size') * perc : 0;
-          };
+          val = () => (this._controller ? this._controller.info('size') * perc : 0);
         }
         if (_.isFunction(val)) {
         // function
@@ -682,7 +680,7 @@ class Scene {
   setPin(element, settings) {
     const defaultSettings = {
       pushFollowers: true,
-      spacerClass: 'scrollmagic-pin-spacer',
+      spacerClass: 'scrollwizardry-pin-spacer',
     };
 
     settings = _.merge({}, defaultSettings, settings);

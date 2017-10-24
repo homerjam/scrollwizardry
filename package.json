@@ -1,6 +1,6 @@
 {
   "name": "scrollwizardry",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "ScrollMagic for wizards",
   "main": "dist/scrollwizardry.js",
   "scripts": {

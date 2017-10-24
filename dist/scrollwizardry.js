@@ -654,7 +654,7 @@ var Indicator = function () {
 
 /* eslint-env browser */
 
-var PIN_SPACER_ATTRIBUTE$1 = 'data-scrollmagic-pin-spacer';
+var PIN_SPACER_ATTRIBUTE$1 = 'data-scrollwizardry-pin-spacer';
 
 var NAMESPACE$1 = 'ScrollWizardry.Scene';
 
@@ -665,21 +665,21 @@ var SCENE_STATE_AFTER = 'AFTER';
 // list of options that trigger a `shift` event
 var SHIFTS = ['duration', 'offset', 'triggerHook'];
 
+var DEFAULT_SCENE_OPTIONS = {
+  duration: 0,
+  offset: 0,
+  triggerElement: undefined,
+  triggerHook: 0.5,
+  reverse: true,
+  loglevel: 2,
+  tweenChanges: false
+};
+
 var Scene = function () {
   function Scene(options) {
     var _this = this;
 
     classCallCheck(this, Scene);
-
-    var DEFAULT_SCENE_OPTIONS = {
-      duration: 0,
-      offset: 0,
-      triggerElement: undefined,
-      triggerHook: 0.5,
-      reverse: true,
-      loglevel: 2,
-      tweenChanges: false
-    };
 
     this.options = _.merge({}, DEFAULT_SCENE_OPTIONS, options);
 
@@ -1397,7 +1397,7 @@ var Scene = function () {
 
       var defaultSettings = {
         pushFollowers: true,
-        spacerClass: 'scrollmagic-pin-spacer'
+        spacerClass: 'scrollwizardry-pin-spacer'
       };
 
       settings = _.merge({}, defaultSettings, settings);
@@ -1745,7 +1745,7 @@ var Scene = function () {
 
 /* eslint-env browser */
 
-var PIN_SPACER_ATTRIBUTE = 'data-scrollmagic-pin-spacer';
+var PIN_SPACER_ATTRIBUTE = 'data-scrollwizardry-pin-spacer';
 
 var NAMESPACE = 'ScrollWizardry.Controller';
 
