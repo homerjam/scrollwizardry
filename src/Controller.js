@@ -85,8 +85,10 @@ class Controller {
   }
 
   _scheduleRefresh() {
-    if (this.options.refreshInterval > 0) {
+    if (this.options.refreshInterval > 0 && this._sceneObjects.length) {
       this._refreshTimeout = window.setTimeout(this._refresh.bind(this), this.options.refreshInterval);
+    } else {
+      this._refreshTimeout = null;
     }
   }
 
@@ -149,18 +151,29 @@ class Controller {
   }
 
   _debounceUpdate() {
-    this._updateTimeout = window.requestAnimationFrame(this._updateScenes.bind(this));
+    if (this._sceneObjects.length) {
+      this._updateTimeout = window.requestAnimationFrame(this._updateScenes.bind(this));
+    } else {
+      this._updateTimeout = null;
+    }
   }
 
   _onChange(event) {
     Log.log(3, 'event fired causing an update:', event.type);
+
     if (event.type === 'resize') {
       // resize
       this._viewportSize = this._getViewportSize();
       this._scrollDirection = SCROLL_DIRECTION_PAUSED;
     }
-    // schedule update
+
+    if (!this._refreshTimeout) {
+      // schedule refresh
+      this._scheduleRefresh();
+    }
+
     if (this._updateScenesOnNextCycle !== true) {
+      // schedule update
       this._updateScenesOnNextCycle = true;
       this._debounceUpdate();
     }
