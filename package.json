@@ -2,12 +2,17 @@
   "name": "scrollwizardry",
   "version": "0.0.10",
   "description": "ScrollMagic for wizards",
-  "main": "dist/scrollwizardry.js",
+  "main": "dist/scrollwizardry.cjs.js",
+  "module": "dist/scrollwizardry.esm.js",
+  "browser": "dist/scrollwizardry.umd.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rollup -c",
     "dev": "rollup -c -w"
   },
+  "files": [
+    "dist"
+  ],
   "author": "Homerjam <jameshomer85@gmail.com>",
   "license": "MIT",
   "repository": {
@@ -22,6 +27,8 @@
     "eslint-config-airbnb-base": "^11.3.1",
     "eslint-plugin-import": "^2.7.0",
     "rollup-plugin-babel": "^2.7.1",
+    "rollup-plugin-commonjs": "^9.1.0",
+    "rollup-plugin-node-resolve": "^3.3.0",
     "rollup-watch": "^4.3.1"
   },
   "peerDependencies": {
