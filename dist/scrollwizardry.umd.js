@@ -18972,6 +18972,8 @@
 	        }
 	      }
 
+	      this._debounceUpdate();
+
 	      return this;
 	    }
 	  }, {

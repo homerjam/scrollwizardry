@@ -1674,6 +1674,8 @@ class Controller {
       }
     }
 
+    this._debounceUpdate();
+
     return this;
   }
 
