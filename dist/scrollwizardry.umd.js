@@ -17181,7 +17181,7 @@
 	  }, {
 	    key: 'marginCollapse',
 	    value: function marginCollapse(display) {
-	      return ['block', 'flex', 'list-item', 'table', '-webkit-box'].includes(display);
+	      return ['block', 'flex', 'list-item', 'table', '-webkit-box'].indexOf(display) !== -1;
 	    }
 	  }, {
 	    key: 'css',
@@ -18945,7 +18945,7 @@
 	        });
 	      } else if (newScene.controller() !== this) {
 	        newScene.addTo(this);
-	      } else if (!this._sceneObjects.includes(newScene)) {
+	      } else if (this._sceneObjects.indexOf(newScene) === -1) {
 	        this._sceneObjects.push(newScene);
 
 	        this._sceneObjects = this._sortScenes(this._sceneObjects);
