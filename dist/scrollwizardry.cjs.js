@@ -50,7 +50,7 @@ class Util {
     return offset;
   }
   static marginCollapse(display) {
-    return ['block', 'flex', 'list-item', 'table', '-webkit-box'].indexOf(display) !== -1;
+    return ['block', 'flex', 'list-item', 'table', '-webkit-box'].includes(display);
   }
   static css(el, css) {
     if (!css) {
@@ -84,12 +84,11 @@ class Event$1 {
   }
 }
 
-const DEBUG = false;
 const LOG_LEVELS = ['error', 'warn', 'log'];
 
 class Log {
   static log(loglevel) {
-    if (!DEBUG) {
+    {
       return;
     }
     if (loglevel > LOG_LEVELS.length || loglevel <= 0) loglevel = LOG_LEVELS.length;
@@ -1648,7 +1647,7 @@ class Controller {
     } else if (newScene.controller() !== this) {
       newScene.addTo(this);
 
-    } else if (this._sceneObjects.indexOf(newScene) === -1) {
+    } else if (!this._sceneObjects.includes(newScene)) {
       this._sceneObjects.push(newScene);
 
       this._sceneObjects = this._sortScenes(this._sceneObjects);
@@ -1834,8 +1833,10 @@ class Controller {
 
   destroy(resetScenes) {
     window.clearTimeout(this._refreshTimeout);
+	
+	let sceneObjectsTmp = this._sceneObjects.map(scene => scene);
 
-    this._sceneObjects.forEach(scene => scene.destroy(resetScenes));
+    sceneObjectsTmp.forEach(scene => scene.destroy(resetScenes));
 
     this.options.container.removeEventListener('resize', this._onChange.bind(this), { passive: true });
     this.options.container.removeEventListener('scroll', this._onChange.bind(this), { passive: true });

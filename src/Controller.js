@@ -406,8 +406,10 @@ class Controller {
 
   destroy(resetScenes) {
     window.clearTimeout(this._refreshTimeout);
+	
+	let sceneObjectsTmp = this._sceneObjects.map(scene => scene)
 
-    this._sceneObjects.forEach(scene => scene.destroy(resetScenes));
+    sceneObjectsTmp.forEach(scene => scene.destroy(resetScenes));
 
     this.options.container.removeEventListener('resize', this._onChange.bind(this), { passive: true });
     this.options.container.removeEventListener('scroll', this._onChange.bind(this), { passive: true });
