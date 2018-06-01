@@ -1,9 +1,9 @@
 class Event {
   constructor(type, namespace, target, vars) {
     vars = vars || {};
-    for (const key in vars) {
+    Object.keys(vars).forEach((key) => {
       this[key] = vars[key];
-    }
+    });
     this.type = type;
     this.target = target;
     this.currentTarget = target;

@@ -195,7 +195,7 @@ class Controller {
     }
 
     // refresh all scenes
-    this._sceneObjects.forEach((scene, index) => {
+    this._sceneObjects.forEach((scene) => {
       scene.refresh();
     });
 
@@ -407,7 +407,7 @@ class Controller {
   destroy(resetScenes) {
     window.clearTimeout(this._refreshTimeout);
 
-    let sceneObjectsTmp = this._sceneObjects.map(scene => scene)
+    const sceneObjectsTmp = this._sceneObjects.map(scene => scene);
 
     sceneObjectsTmp.forEach(scene => scene.destroy(resetScenes));
 
@@ -443,7 +443,7 @@ class Controller {
   _handleTriggerPositionChange() {
     this.updateTriggerGroupPositions();
 
-    this._sceneObjects.forEach((scene, index) => {
+    this._sceneObjects.forEach((scene) => {
       if (scene._indicator) {
         scene._indicator._updateBounds();
       }

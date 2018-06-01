@@ -2,7 +2,7 @@ const DEBUG = false;
 const LOG_LEVELS = ['error', 'warn', 'log'];
 
 class Log {
-  static log(loglevel) {
+  static log(loglevel, ...args) {
     if (!DEBUG) {
       return;
     }
@@ -10,7 +10,7 @@ class Log {
     const now = new Date();
     const time = `${(`0${now.getHours()}`).slice(-2)}:${(`0${now.getMinutes()}`).slice(-2)}:${(`0${now.getSeconds()}`).slice(-2)}:${(`00${now.getMilliseconds()}`).slice(-3)}`;
     const method = LOG_LEVELS[loglevel - 1];
-    const args = Array.prototype.splice.call(arguments, 1);
+    // eslint-disable-next-line
     const func = Function.prototype.bind.call(console[method], console);
     args.unshift(time);
     func.apply(console, args);

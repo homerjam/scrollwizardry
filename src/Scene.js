@@ -143,7 +143,7 @@ class Scene {
       }
     });
 
-    this.on('shift.internal', (event) => {
+    this.on('shift.internal', () => {
       this.update(); // update scene to reflect new position
     });
 
@@ -160,11 +160,11 @@ class Scene {
       }
     });
 
-    this.on('progress.internal', (event) => {
+    this.on('progress.internal', () => {
       this._updatePinState();
     });
 
-    this.on('add.internal', (event) => {
+    this.on('add.internal', () => {
       this._updatePinDimensions();
     });
 
@@ -218,7 +218,7 @@ class Scene {
       return this;
     }
     names = names.trim().split(' ');
-    names.forEach((fullname, key) => {
+    names.forEach((fullname) => {
       const nameparts = fullname.split('.');
       const eventname = nameparts[0];
       const namespace = nameparts[1] || '';
@@ -452,7 +452,7 @@ class Scene {
     }
   }
 
-  _onContainerResize(event) {
+  _onContainerResize() {
     if (this.options.triggerHook > 0) {
       this.trigger('shift', { reason: 'containerResize' });
     }
