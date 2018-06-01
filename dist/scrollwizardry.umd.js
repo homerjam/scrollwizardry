@@ -428,7 +428,7 @@
 	  var root = freeGlobal || freeSelf || Function('return this')();
 
 	  /** Detect free variable `exports`. */
-	  var freeExports = 'object' == 'object' && exports && !exports.nodeType && exports;
+	  var freeExports = exports && !exports.nodeType && exports;
 
 	  /** Detect free variable `module`. */
 	  var freeModule = freeExports && 'object' == 'object' && module && !module.nodeType && module;
@@ -6031,11 +6031,10 @@
 
 	      try {
 	        value[symToStringTag] = undefined;
-	        var unmasked = true;
 	      } catch (e) {}
 
 	      var result = nativeObjectToString.call(value);
-	      if (unmasked) {
+	      {
 	        if (isOwn) {
 	          value[symToStringTag] = tag;
 	        } else {
@@ -17181,7 +17180,7 @@
 	  }, {
 	    key: 'marginCollapse',
 	    value: function marginCollapse(display) {
-	      return ['block', 'flex', 'list-item', 'table', '-webkit-box'].indexOf(display) !== -1;
+	      return ['block', 'flex', 'list-item', 'table', '-webkit-box'].includes(display);
 	    }
 	  }, {
 	    key: 'css',
@@ -17205,12 +17204,14 @@
 	}();
 
 	var Event$1 = function Event(type, namespace, target, vars) {
+	  var _this = this;
+
 	  classCallCheck(this, Event);
 
 	  vars = vars || {};
-	  for (var key in vars) {
-	    this[key] = vars[key];
-	  }
+	  Object.keys(vars).forEach(function (key) {
+	    _this[key] = vars[key];
+	  });
 	  this.type = type;
 	  this.target = target;
 	  this.currentTarget = target;
@@ -17220,7 +17221,6 @@
 	  return this;
 	};
 
-	var DEBUG = false;
 	var LOG_LEVELS = ['error', 'warn', 'log'];
 
 	var Log = function () {
@@ -17231,15 +17231,20 @@
 	  createClass(Log, null, [{
 	    key: 'log',
 	    value: function log(loglevel) {
-	      if (!DEBUG) {
+	      {
 	        return;
 	      }
 	      if (loglevel > LOG_LEVELS.length || loglevel <= 0) loglevel = LOG_LEVELS.length;
 	      var now = new Date();
 	      var time = ('0' + now.getHours()).slice(-2) + ':' + ('0' + now.getMinutes()).slice(-2) + ':' + ('0' + now.getSeconds()).slice(-2) + ':' + ('00' + now.getMilliseconds()).slice(-3);
 	      var method = LOG_LEVELS[loglevel - 1];
-	      var args = Array.prototype.splice.call(arguments, 1);
+	      // eslint-disable-next-line
 	      var func = Function.prototype.bind.call(console[method], console);
+
+	      for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+	        args[_key - 1] = arguments[_key];
+	      }
+
 	      args.unshift(time);
 	      func.apply(console, args);
 	    }
@@ -17767,7 +17772,7 @@
 	      }
 	    });
 
-	    this.on('shift.internal', function (event) {
+	    this.on('shift.internal', function () {
 	      _this.update(); // update scene to reflect new position
 	    });
 
@@ -17784,11 +17789,11 @@
 	      }
 	    });
 
-	    this.on('progress.internal', function (event) {
+	    this.on('progress.internal', function () {
 	      _this._updatePinState();
 	    });
 
-	    this.on('add.internal', function (event) {
+	    this.on('add.internal', function () {
 	      _this._updatePinDimensions();
 	    });
 
@@ -17850,7 +17855,7 @@
 	        return this;
 	      }
 	      names = names.trim().split(' ');
-	      names.forEach(function (fullname, key) {
+	      names.forEach(function (fullname) {
 	        var nameparts = fullname.split('.');
 	        var eventname = nameparts[0];
 	        var namespace = nameparts[1] || '';
@@ -18110,7 +18115,7 @@
 	    }
 	  }, {
 	    key: '_onContainerResize',
-	    value: function _onContainerResize(event) {
+	    value: function _onContainerResize() {
 	      if (this.options.triggerHook > 0) {
 	        this.trigger('shift', { reason: 'containerResize' });
 	      }
@@ -18916,7 +18921,7 @@
 	      }
 
 	      // refresh all scenes
-	      this._sceneObjects.forEach(function (scene, index) {
+	      this._sceneObjects.forEach(function (scene) {
 	        scene.refresh();
 	      });
 
@@ -18945,7 +18950,7 @@
 	        });
 	      } else if (newScene.controller() !== this) {
 	        newScene.addTo(this);
-	      } else if (this._sceneObjects.indexOf(newScene) === -1) {
+	      } else if (!this._sceneObjects.includes(newScene)) {
 	        this._sceneObjects.push(newScene);
 
 	        this._sceneObjects = this._sortScenes(this._sceneObjects);
@@ -19139,7 +19144,11 @@
 	    value: function destroy(resetScenes) {
 	      window.clearTimeout(this._refreshTimeout);
 
-	      this._sceneObjects.forEach(function (scene) {
+	      var sceneObjectsTmp = this._sceneObjects.map(function (scene) {
+	        return scene;
+	      });
+
+	      sceneObjectsTmp.forEach(function (scene) {
 	        return scene.destroy(resetScenes);
 	      });
 
@@ -19181,7 +19190,7 @@
 	    value: function _handleTriggerPositionChange() {
 	      this.updateTriggerGroupPositions();
 
-	      this._sceneObjects.forEach(function (scene, index) {
+	      this._sceneObjects.forEach(function (scene) {
 	        if (scene._indicator) {
 	          scene._indicator._updateBounds();
 	        }
