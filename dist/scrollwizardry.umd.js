@@ -17723,7 +17723,7 @@
 	        val = val || undefined;
 	        if (val) {
 	          var el = lodash.isString(val) ? Util.elements(val)[0] : val;
-	          if (el && el.parentNode) {
+	          if (el !== undefined && el.parentNode) {
 	            val = el;
 	          } else {
 	            throw Error('Element defined in option "triggerElement" was not found: ' + val);
