@@ -44,7 +44,9 @@ class Util {
     return offset;
   }
   static marginCollapse(display) {
-    return ['block', 'flex', 'list-item', 'table', '-webkit-box'].includes(display);
+    return ['block', 'flex', 'list-item', 'table', '-webkit-box'].includes(
+      display
+    );
   }
   static css(el, css) {
     if (!css) {
@@ -52,7 +54,8 @@ class Util {
     }
 
     _.forEach(css, (value, key) => {
-      if (value === parseFloat(value)) { // assume pixel for seemingly numerical values
+      if (value === parseFloat(value)) {
+        // assume pixel for seemingly numerical values
         value += 'px';
       }
       el.style[_.camelCase(key)] = value;

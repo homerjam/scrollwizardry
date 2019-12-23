@@ -20,19 +20,18 @@
     "url": "https://github.com/homerjam/scrollwizardry"
   },
   "devDependencies": {
-    "babel-eslint": "^7.2.3",
-    "babel-plugin-external-helpers": "^6.22.0",
-    "babel-preset-latest": "^6.24.1",
-    "eslint": "^4.3.0",
-    "eslint-config-airbnb-base": "^11.3.1",
-    "eslint-plugin-import": "^2.7.0",
-    "rollup-plugin-babel": "^2.7.1",
-    "rollup-plugin-commonjs": "^9.1.0",
-    "rollup-plugin-node-resolve": "^3.3.0",
+    "@babel/core": "^7.7.7",
+    "@babel/preset-env": "^7.7.7",
+    "babel-eslint": "^10.0.3",
+    "eslint": "^6.8.0",
+    "rollup": "^1.27.14",
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-watch": "^4.3.1"
   },
   "peerDependencies": {
-    "gsap": "^1.20.2",
-    "lodash": "^4.17.4"
+    "gsap": "^3.0.4",
+    "lodash": "^4.17.15"
   }
 }

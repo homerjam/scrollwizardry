@@ -44,7 +44,9 @@ class Util {
     return offset;
   }
   static marginCollapse(display) {
-    return ['block', 'flex', 'list-item', 'table', '-webkit-box'].includes(display);
+    return ['block', 'flex', 'list-item', 'table', '-webkit-box'].includes(
+      display
+    );
   }
   static css(el, css) {
     if (!css) {
@@ -52,7 +54,8 @@ class Util {
     }
 
     _.forEach(css, (value, key) => {
-      if (value === parseFloat(value)) { // assume pixel for seemingly numerical values
+      if (value === parseFloat(value)) {
+        // assume pixel for seemingly numerical values
         value += 'px';
       }
       el.style[_.camelCase(key)] = value;
@@ -65,7 +68,7 @@ class Util {
 class Event$1 {
   constructor(type, namespace, target, vars) {
     vars = vars || {};
-    Object.keys(vars).forEach((key) => {
+    Object.keys(vars).forEach(key => {
       this[key] = vars[key];
     });
     this.type = type;
@@ -78,21 +81,11 @@ class Event$1 {
   }
 }
 
-const LOG_LEVELS = ['error', 'warn', 'log'];
-
 class Log {
   static log(loglevel, ...args) {
     {
       return;
     }
-    if (loglevel > LOG_LEVELS.length || loglevel <= 0) loglevel = LOG_LEVELS.length;
-    const now = new Date();
-    const time = `${(`0${now.getHours()}`).slice(-2)}:${(`0${now.getMinutes()}`).slice(-2)}:${(`0${now.getSeconds()}`).slice(-2)}:${(`00${now.getMilliseconds()}`).slice(-3)}`;
-    const method = LOG_LEVELS[loglevel - 1];
-    // eslint-disable-next-line
-    const func = Function.prototype.bind.call(console[method], console);
-    args.unshift(time);
-    func.apply(console, args);
   }
 }
 
@@ -234,7 +227,9 @@ class Indicator {
 
     if (!this._boundsContainer) {
       // no parent supplied or doesnt exist
-      this._boundsContainer = isDocument ? document.body : this._ctrl.info('container'); // check if window/document (then use body)
+      this._boundsContainer = isDocument
+        ? document.body
+        : this._ctrl.info('container'); // check if window/document (then use body)
     }
     if (!isDocument && Util.css(this._boundsContainer).position === 'static') {
       // position mode needed for correct positioning of indicators
@@ -242,14 +237,21 @@ class Indicator {
     }
 
     // add listeners for updates
-    this.scene.on('change.plugin_addIndicators', this._handleTriggerParamsChange.bind(this));
-    this.scene.on('shift.plugin_addIndicators', this._handleBoundsParamsChange.bind(this));
+    this.scene.on(
+      'change.plugin_addIndicators',
+      this._handleTriggerParamsChange.bind(this)
+    );
+    this.scene.on(
+      'shift.plugin_addIndicators',
+      this._handleBoundsParamsChange.bind(this)
+    );
 
     // updates trigger & bounds (will add elements if needed)
     this._updateTriggerGroup();
     this._updateBounds();
 
-    setTimeout(() => { // do after all execution is finished otherwise sometimes size calculations are off
+    setTimeout(() => {
+      // do after all execution is finished otherwise sometimes size calculations are off
       this._ctrl.updateBoundsPositions(this);
     }, 0);
 
@@ -258,9 +260,16 @@ class Indicator {
 
   // remove indicators from DOM
   remove() {
-    if (this.triggerGroup) { // if not set there's nothing to remove
-      this.scene.off('change.plugin_addIndicators', this._handleTriggerParamsChange);
-      this.scene.off('shift.plugin_addIndicators', this._handleBoundsParamsChange);
+    if (this.triggerGroup) {
+      // if not set there's nothing to remove
+      this.scene.off(
+        'change.plugin_addIndicators',
+        this._handleTriggerParamsChange
+      );
+      this.scene.off(
+        'shift.plugin_addIndicators',
+        this._handleBoundsParamsChange
+      );
 
       if (this.triggerGroup.members.length > 1) {
         // just remove from memberlist of old group
@@ -358,7 +367,10 @@ class Indicator {
   }
 
   _removeTriggerGroup() {
-    this._ctrl._indicators.groups.splice(this._ctrl._indicators.groups.indexOf(this.triggerGroup), 1);
+    this._ctrl._indicators.groups.splice(
+      this._ctrl._indicators.groups.indexOf(this.triggerGroup),
+      1
+    );
     this.triggerGroup.element.parentNode.removeChild(this.triggerGroup.element);
     this.triggerGroup = null;
   }
@@ -387,13 +399,18 @@ class Indicator {
       if (Math.abs(group.triggerHook - triggerHook) < closeEnough) {
         // found a match!
         // Log.log(0, "trigger", options.name, "->", "found match");
-        if (this.triggerGroup) { // do I have an old group that is out of sync?
-          if (this.triggerGroup.members.length === 1) { // is it the only remaining group?
+        if (this.triggerGroup) {
+          // do I have an old group that is out of sync?
+          if (this.triggerGroup.members.length === 1) {
+            // is it the only remaining group?
             // Log.log(0, "trigger", options.name, "->", "kill");
             // was the last member, remove the whole group
             this._removeTriggerGroup();
           } else {
-            this.triggerGroup.members.splice(this.triggerGroup.members.indexOf(this), 1); // just remove from memberlist of old group
+            this.triggerGroup.members.splice(
+              this.triggerGroup.members.indexOf(this),
+              1
+            ); // just remove from memberlist of old group
             this._ctrl.updateTriggerGroupLabel(this.triggerGroup);
             this._ctrl.updateTriggerGroupPositions(this.triggerGroup);
             // Log.log(0, "trigger", options.name, "->", "removing from previous member list");
@@ -417,7 +434,10 @@ class Indicator {
         return;
       }
       // Log.log(0, "trigger", options.name, "->", "removing from previous member list");
-      this.triggerGroup.members.splice(this.triggerGroup.members.indexOf(this), 1); // just remove from memberlist of old group
+      this.triggerGroup.members.splice(
+        this.triggerGroup.members.indexOf(this),
+        1
+      ); // just remove from memberlist of old group
       this._ctrl.updateTriggerGroupLabel(this.triggerGroup);
       this._ctrl.updateTriggerGroupPositions(this.triggerGroup);
       this.triggerGroup = null; // need a brand new group...
@@ -474,19 +494,20 @@ class Scene {
     this._indicator = null;
 
     // add getters/setters for all possible options
-    Object.keys(DEFAULT_SCENE_OPTIONS).forEach((optionName) => {
+    Object.keys(DEFAULT_SCENE_OPTIONS).forEach(optionName => {
       this._addSceneOption(optionName);
     });
 
     this.validate = {
       duration(val) {
         if (_.isString(val) && val.match(/^(\.|\d)*\d+%$/)) {
-        // percentage value
+          // percentage value
           const perc = parseFloat(val) / 100;
-          val = () => (this._controller ? this._controller.info('size') * perc : 0);
+          val = () =>
+            this._controller ? this._controller.info('size') * perc : 0;
         }
         if (_.isFunction(val)) {
-        // function
+          // function
           this._durationUpdateMethod = val;
           try {
             val = parseFloat(this._durationUpdateMethod());
@@ -499,7 +520,9 @@ class Scene {
         if (!_.isNumber(val) || val < 0) {
           if (this._durationUpdateMethod) {
             this._durationUpdateMethod = null;
-            throw Error(`Invalid return value of supplied function for option "duration": ${val}`);
+            throw Error(
+              `Invalid return value of supplied function for option "duration": ${val}`
+            );
           } else {
             throw Error(`Invalid value for option "duration": ${val}`);
           }
@@ -523,7 +546,9 @@ class Scene {
           if (el !== undefined && el.parentNode) {
             val = el;
           } else {
-            throw Error(`Element defined in option "triggerElement" was not found: ${val}`);
+            throw Error(
+              `Element defined in option "triggerElement" was not found: ${val}`
+            );
           }
         }
         return val;
@@ -557,11 +582,13 @@ class Scene {
     // validate all options
     this._validateOption();
 
-    this.on('change.internal', (event) => {
-      if (event.what !== 'loglevel' && event.what !== 'tweenChanges') { // no need for a scene update scene with these options...
+    this.on('change.internal', event => {
+      if (event.what !== 'loglevel' && event.what !== 'tweenChanges') {
+        // no need for a scene update scene with these options...
         if (event.what === 'triggerElement') {
           this._updateTriggerElementPosition();
-        } else if (event.what === 'reverse') { // the only property left that may have an impact on the current scene state. Everything else is handled by the shift event.
+        } else if (event.what === 'reverse') {
+          // the only property left that may have an impact on the current scene state. Everything else is handled by the shift event.
           this.update();
         }
       }
@@ -573,9 +600,12 @@ class Scene {
 
     // pinning
 
-    this.on('shift.internal', (event) => {
+    this.on('shift.internal', event => {
       const durationChanged = event.reason === 'duration';
-      if ((this._state === SCENE_STATE_AFTER && durationChanged) || (this._state === SCENE_STATE_DURING && this.options.duration === 0)) {
+      if (
+        (this._state === SCENE_STATE_AFTER && durationChanged) ||
+        (this._state === SCENE_STATE_DURING && this.options.duration === 0)
+      ) {
         // if [duration changed after a scene (inside scene progress updates pin position)] or [duration is 0, we are in pin phase and some other value changed].
         this._updatePinState();
       }
@@ -592,13 +622,13 @@ class Scene {
       this._updatePinDimensions();
     });
 
-    this.on('destroy.internal', (event) => {
+    this.on('destroy.internal', event => {
       this.removePin(event.reset);
     });
 
     // class toggle
 
-    this.on('destroy.internal', (event) => {
+    this.on('destroy.internal', event => {
       this.removeClassToggle(event.reset);
     });
 
@@ -608,7 +638,7 @@ class Scene {
       this._updateTweenProgress();
     });
 
-    this.on('destroy.plugin_gsap', (event) => {
+    this.on('destroy.plugin_gsap', event => {
       this.removeTween(event.reset);
     });
   }
@@ -616,11 +646,12 @@ class Scene {
   on(names, callback) {
     if (_.isFunction(callback)) {
       names = names.trim().split(' ');
-      names.forEach((fullname) => {
+      names.forEach(fullname => {
         const nameparts = fullname.split('.');
         const eventname = nameparts[0];
         const namespace = nameparts[1];
-        if (eventname !== '*') { // disallow wildcards
+        if (eventname !== '*') {
+          // disallow wildcards
           if (!this._listeners[eventname]) {
             this._listeners[eventname] = [];
           }
@@ -631,7 +662,10 @@ class Scene {
         }
       });
     } else {
-      Log.log(1, `ERROR when calling '.on()': Supplied callback for '${names}' is not a valid function!`);
+      Log.log(
+        1,
+        `ERROR when calling '.on()': Supplied callback for '${names}' is not a valid function!`
+      );
     }
     return this;
   }
@@ -642,17 +676,22 @@ class Scene {
       return this;
     }
     names = names.trim().split(' ');
-    names.forEach((fullname) => {
+    names.forEach(fullname => {
       const nameparts = fullname.split('.');
       const eventname = nameparts[0];
       const namespace = nameparts[1] || '';
-      const removeList = eventname === '*' ? Object.keys(this._listeners) : [eventname];
-      removeList.forEach((remove) => {
+      const removeList =
+        eventname === '*' ? Object.keys(this._listeners) : [eventname];
+      removeList.forEach(remove => {
         const list = this._listeners[remove] || [];
         let i = list.length;
         while (i--) {
           const listener = list[i];
-          if (listener && (namespace === listener.namespace || namespace === '*') && (!callback || callback === listener.callback)) {
+          if (
+            listener &&
+            (namespace === listener.namespace || namespace === '*') &&
+            (!callback || callback === listener.callback)
+          ) {
             list.splice(i, 1);
           }
         }
@@ -672,9 +711,12 @@ class Scene {
       const listeners = this._listeners[eventname];
       Log.log(3, 'event fired:', eventname, vars ? '->' : '', vars || '');
       if (listeners) {
-        listeners.forEach((listener) => {
+        listeners.forEach(listener => {
           if (!namespace || namespace === listener.namespace) {
-            listener.callback.call(this, new Event$1(eventname, listener.namespace, this, vars));
+            listener.callback.call(
+              this,
+              new Event$1(eventname, listener.namespace, this, vars)
+            );
           }
         });
       }
@@ -687,7 +729,8 @@ class Scene {
   addTo(controller) {
     if (this._controller !== controller) {
       // new controller
-      if (this._controller) { // was associated to a different controller before, so remove it...
+      if (this._controller) {
+        // was associated to a different controller before, so remove it...
         this._controller.removeScene(this);
       }
       this._controller = controller;
@@ -695,7 +738,11 @@ class Scene {
       this._updateDuration(true);
       this._updateTriggerElementPosition(true);
       this._updateScrollOffset();
-      this._controller.info('container').addEventListener('resize', this._onContainerResize.bind(this), { passive: true });
+      this._controller
+        .info('container')
+        .addEventListener('resize', this._onContainerResize.bind(this), {
+          passive: true,
+        });
       controller.addScene(this);
       this.trigger('add', { controller: this._controller });
       Log.log(3, `added ${NAMESPACE} to controller`);
@@ -706,7 +753,11 @@ class Scene {
 
   remove() {
     if (this._controller) {
-      this._controller.info('container').removeEventListener('resize', this._onContainerResize.bind(this), { passive: true });
+      this._controller
+        .info('container')
+        .removeEventListener('resize', this._onContainerResize.bind(this), {
+          passive: true,
+        });
       const tmpParent = this._controller;
       this._controller = null;
       tmpParent.removeScene(this);
@@ -734,12 +785,18 @@ class Scene {
           let newProgress;
 
           if (this.options.duration > 0) {
-            newProgress = (scrollPos - this._scrollOffset.start) / (this._scrollOffset.end - this._scrollOffset.start);
+            newProgress =
+              (scrollPos - this._scrollOffset.start) /
+              (this._scrollOffset.end - this._scrollOffset.start);
           } else {
             newProgress = scrollPos >= this._scrollOffset.start ? 1 : 0;
           }
 
-          this.trigger('update', { startPos: this._scrollOffset.start, endPos: this._scrollOffset.end, scrollPos });
+          this.trigger('update', {
+            startPos: this._scrollOffset.start,
+            endPos: this._scrollOffset.end,
+            scrollPos,
+          });
 
           this.progress(newProgress);
         } else if (this._pin && this._state === SCENE_STATE_DURING) {
@@ -760,22 +817,30 @@ class Scene {
   }
 
   progress(progress) {
-    if (!arguments.length) { // get
+    if (!arguments.length) {
+      // get
       return this._progress;
     } // set
 
     let doUpdate = false;
     const oldState = this._state;
-    const scrollDirection = this._controller ? this._controller.info('scrollDirection') : 'PAUSED';
+    const scrollDirection = this._controller
+      ? this._controller.info('scrollDirection')
+      : 'PAUSED';
     const reverseOrForward = this.options.reverse || progress >= this._progress;
     if (this.options.duration === 0) {
       // zero duration scenes
       doUpdate = this._progress !== progress;
       this._progress = progress < 1 && reverseOrForward ? 0 : 1;
-      this._state = this._progress === 0 ? SCENE_STATE_BEFORE : SCENE_STATE_DURING;
+      this._state =
+        this._progress === 0 ? SCENE_STATE_BEFORE : SCENE_STATE_DURING;
     } else {
       // scenes with start and end
-      if (progress < 0 && this._state !== SCENE_STATE_BEFORE && reverseOrForward) {
+      if (
+        progress < 0 &&
+        this._state !== SCENE_STATE_BEFORE &&
+        reverseOrForward
+      ) {
         // go back to initial state
         this._progress = 0;
         this._state = SCENE_STATE_BEFORE;
@@ -794,21 +859,28 @@ class Scene {
     }
     if (doUpdate) {
       // fire events
-      const eventVars = { progress: this._progress, state: this._state, scrollDirection };
+      const eventVars = {
+        progress: this._progress,
+        state: this._state,
+        scrollDirection,
+      };
       const stateChanged = this._state !== oldState;
 
-      const trigger = (eventName) => { // tmp helper to simplify code
+      const trigger = eventName => {
+        // tmp helper to simplify code
         this.trigger(eventName, eventVars);
       };
 
-      if (stateChanged) { // enter events
+      if (stateChanged) {
+        // enter events
         if (oldState !== SCENE_STATE_DURING) {
           trigger('enter');
           trigger(oldState === SCENE_STATE_BEFORE ? 'start' : 'end');
         }
       }
       trigger('progress');
-      if (stateChanged) { // leave events
+      if (stateChanged) {
+        // leave events
         if (this._state !== SCENE_STATE_DURING) {
           trigger(this._state === SCENE_STATE_BEFORE ? 'start' : 'end');
           trigger('leave');
@@ -820,11 +892,14 @@ class Scene {
   }
 
   _updateScrollOffset() {
-    const offset = _.isFunction(this.options.offset) ? this.options.offset() : this.options.offset;
+    const offset = _.isFunction(this.options.offset)
+      ? this.options.offset()
+      : this.options.offset;
     this._scrollOffset = { start: this._triggerPos + offset };
     if (this._controller && this.options.triggerElement) {
       // take away triggerHook portion to get relative to top
-      this._scrollOffset.start -= this._controller.info('size') * this.options.triggerHook;
+      this._scrollOffset.start -=
+        this._controller.info('size') * this.options.triggerHook;
     }
     this._scrollOffset.end = this._scrollOffset.start + this.options.duration;
   }
@@ -833,8 +908,15 @@ class Scene {
     // update duration
     if (this._durationUpdateMethod) {
       const varname = 'duration';
-      if (this._changeOption(varname, this._durationUpdateMethod.call(this)) && !suppressEvents) { // set
-        this.trigger('change', { what: varname, newVal: this.options[varname] });
+      if (
+        this._changeOption(varname, this._durationUpdateMethod.call(this)) &&
+        !suppressEvents
+      ) {
+        // set
+        this.trigger('change', {
+          what: varname,
+          newVal: this.options[varname],
+        });
         this.trigger('shift', { reason: varname });
       }
     }
@@ -843,9 +925,12 @@ class Scene {
   _updateTriggerElementPosition(suppressEvents) {
     let elementPos = 0;
     let telem = this.options.triggerElement;
-    if (this._controller && (telem || this._triggerPos > 0)) { // either an element exists or was removed and the triggerPos is still > 0
-      if (telem) { // there currently a triggerElement set
-        if (telem.parentNode) { // check if element is still attached to DOM
+    if (this._controller && (telem || this._triggerPos > 0)) {
+      // either an element exists or was removed and the triggerPos is still > 0
+      if (telem) {
+        // there currently a triggerElement set
+        if (telem.parentNode) {
+          // check if element is still attached to DOM
           const controllerInfo = this._controller.info();
           const containerOffset = Util.offset(controllerInfo.container); // container position is needed because element offset is returned in relation to document, not in relation to container.
           const param = controllerInfo.vertical ? 'top' : 'left'; // which param is of interest ?
@@ -857,13 +942,19 @@ class Scene {
 
           const elementOffset = Util.offset(telem);
 
-          if (!controllerInfo.isDocument) { // container is not the document root, so substract scroll Position to get correct trigger element position relative to scrollcontent
+          if (!controllerInfo.isDocument) {
+            // container is not the document root, so substract scroll Position to get correct trigger element position relative to scrollcontent
             containerOffset[param] -= this._controller.scrollPos();
           }
 
           elementPos = elementOffset[param] - containerOffset[param];
-        } else { // there was an element, but it was removed from DOM
-          Log.log(2, 'WARNING: triggerElement was removed from DOM and will be reset to', undefined);
+        } else {
+          // there was an element, but it was removed from DOM
+          Log.log(
+            2,
+            'WARNING: triggerElement was removed from DOM and will be reset to',
+            undefined
+          );
           this.triggerElement(undefined); // unset, so a change event is triggered
         }
       }
@@ -884,12 +975,18 @@ class Scene {
 
   _validateOption(...check) {
     check = check.length ? check : Object.keys(this.validate);
-    check.forEach((optionName) => {
+    check.forEach(optionName => {
       let value;
-      if (this.validate[optionName]) { // there is a validation method for this option
-        try { // validate value
-          value = this.validate[optionName].call(this, this.options[optionName]);
-        } catch (event) { // validation failed -> reset to default
+      if (this.validate[optionName]) {
+        // there is a validation method for this option
+        try {
+          // validate value
+          value = this.validate[optionName].call(
+            this,
+            this.options[optionName]
+          );
+        } catch (event) {
+          // validation failed -> reset to default
           value = DEFAULT_SCENE_OPTIONS[optionName];
           const logMSG = _.isString(event) ? [event] : event;
           if (_.isArray(logMSG)) {
@@ -897,7 +994,11 @@ class Scene {
             logMSG.unshift(1); // loglevel 1 for error msg
             Log.log.apply(this, logMSG);
           } else {
-            Log.log(1, `ERROR: Problem executing validation callback for option '${optionName}':`, event.message);
+            Log.log(
+              1,
+              `ERROR: Problem executing validation callback for option '${optionName}':`,
+              event.message
+            );
           }
         } finally {
           // this.options[optionName] = value;
@@ -920,14 +1021,20 @@ class Scene {
   _addSceneOption(optionName) {
     if (!this[optionName]) {
       this[optionName] = (...args) => {
-        if (args.length === 0) { // get
+        if (args.length === 0) {
+          // get
           return this.options[optionName];
         }
-        if (optionName === 'duration') { // new duration is set, so any previously set function must be unset
+        if (optionName === 'duration') {
+          // new duration is set, so any previously set function must be unset
           this._durationUpdateMethod = null;
         }
-        if (this._changeOption(optionName, args[0])) { // set
-          this.trigger('change', { what: optionName, newVal: this.options[optionName] });
+        if (this._changeOption(optionName, args[0])) {
+          // set
+          this.trigger('change', {
+            what: optionName,
+            newVal: this.options[optionName],
+          });
           if (SHIFTS.indexOf(optionName) > -1) {
             this.trigger('shift', { reason: optionName });
           }
@@ -952,7 +1059,9 @@ class Scene {
 
   triggerPosition() {
     // the offset is the basis
-    let offset = _.isFunction(this.options.offset) ? this.options.offset() : this.options.offset;
+    let offset = _.isFunction(this.options.offset)
+      ? this.options.offset()
+      : this.options.offset;
     if (this._controller) {
       // get the trigger position
       if (this.options.triggerElement) {
@@ -973,7 +1082,8 @@ class Scene {
       const containerInfo = this._controller.info();
       const pinTarget = this._pinOptions.spacer.firstChild; // may be pin element or another spacer, if cascading pins
 
-      if (!forceUnpin && this._state === SCENE_STATE_DURING) { // during scene or if duration is 0 and we are past the trigger
+      if (!forceUnpin && this._state === SCENE_STATE_DURING) {
+        // during scene or if duration is 0 and we are past the trigger
         // pinned state
         if (Util.css(pinTarget).position !== 'fixed') {
           // change state before updating pin spacer (position changes due to fixed collapsing might occur.)
@@ -983,16 +1093,16 @@ class Scene {
         }
 
         const fixedPos = Util.offset(this._pinOptions.spacer, true); // get viewport position of spacer
-        const scrollDistance = this.options.reverse || this.options.duration === 0 ?
-          containerInfo.scrollPos - this._scrollOffset.start // quicker
-          : Math.round(this._progress * this.options.duration * 10) / 10; // if no reverse and during pin the position needs to be recalculated using the progress
+        const scrollDistance =
+          this.options.reverse || this.options.duration === 0
+            ? containerInfo.scrollPos - this._scrollOffset.start // quicker
+            : Math.round(this._progress * this.options.duration * 10) / 10; // if no reverse and during pin the position needs to be recalculated using the progress
 
         // add scrollDistance
         fixedPos[containerInfo.vertical ? 'top' : 'left'] += scrollDistance;
 
         // set new values
         Util.css(this._pinOptions.spacer.firstChild, fixedPos);
-
       } else {
         // unpinned state
         const newCSS = {
@@ -1004,12 +1114,20 @@ class Scene {
         let change = Util.css(pinTarget).position !== newCSS.position;
 
         if (!this._pinOptions.pushFollowers) {
-          newCSS[containerInfo.vertical ? 'top' : 'left'] = this.options.duration * this._progress;
-
-        } else if (this.options.duration > 0) { // only concerns scenes with duration
-          if (this._state === SCENE_STATE_AFTER && parseFloat(Util.css(this._pinOptions.spacer).paddingTop) === 0) {
+          newCSS[containerInfo.vertical ? 'top' : 'left'] =
+            this.options.duration * this._progress;
+        } else if (this.options.duration > 0) {
+          // only concerns scenes with duration
+          if (
+            this._state === SCENE_STATE_AFTER &&
+            parseFloat(Util.css(this._pinOptions.spacer).paddingTop) === 0
+          ) {
             change = true; // if in after state but havent updated spacer yet (jumped past pin)
-          } else if (this._state === SCENE_STATE_BEFORE && parseFloat(Util.css(this._pinOptions.spacer).paddingBottom) === 0) { // before
+          } else if (
+            this._state === SCENE_STATE_BEFORE &&
+            parseFloat(Util.css(this._pinOptions.spacer).paddingBottom) === 0
+          ) {
+            // before
             change = true; // jumped past fixed state upward direction
           }
         }
@@ -1029,47 +1147,64 @@ class Scene {
     if (this._pin && this._controller && this._pinOptions.inFlow) {
       // no spacer resize, if original position is absolute
 
-      const during = (this._state === SCENE_STATE_DURING);
+      const during = this._state === SCENE_STATE_DURING;
       const vertical = this._controller.info('vertical');
       const pinTarget = this._pinOptions.spacer.firstChild; // usually the pined element but can also be another spacer (cascaded pins)
-      const marginCollapse = Util.marginCollapse(Util.css(this._pinOptions.spacer).display);
+      const marginCollapse = Util.marginCollapse(
+        Util.css(this._pinOptions.spacer).display
+      );
 
       const css = {};
 
       // set new size
 
       // if relsize: spacer -> pin | else: pin -> spacer
-      if (this._pinOptions.relSize.width || this._pinOptions.relSize.autoFullWidth) {
+      if (
+        this._pinOptions.relSize.width ||
+        this._pinOptions.relSize.autoFullWidth
+      ) {
         if (during) {
           Util.css(this._pin, { width: Util.width(this._pinOptions.spacer) });
         } else {
           Util.css(this._pin, { width: '100%' });
         }
-
       } else {
         // minwidth is needed for cascaded pins.
-        css['min-width'] = Util.width(vertical ? this._pin : pinTarget, true, true);
+        css['min-width'] = Util.width(
+          vertical ? this._pin : pinTarget,
+          true,
+          true
+        );
         css.width = during ? css['min-width'] : 'auto';
       }
 
       if (this._pinOptions.relSize.height) {
         if (during) {
           // the only padding the spacer should ever include is the duration (if pushFollowers = true), so we need to substract that.
-          Util.css(this._pin, { height: Util.height(this._pinOptions.spacer) - (this._pinOptions.pushFollowers ? this.options.duration : 0) });
+          Util.css(this._pin, {
+            height:
+              Util.height(this._pinOptions.spacer) -
+              (this._pinOptions.pushFollowers ? this.options.duration : 0),
+          });
         } else {
           Util.css(this._pin, { height: '100%' });
         }
-
       } else {
         // margin is only included if it's a cascaded pin to resolve an IE9 bug
-        css['min-height'] = Util.height(vertical ? pinTarget : this._pin, true, !marginCollapse); // needed for cascading pins
+        css['min-height'] = Util.height(
+          vertical ? pinTarget : this._pin,
+          true,
+          !marginCollapse
+        ); // needed for cascading pins
         css.height = during ? css['min-height'] : 'auto';
       }
 
       // add space for duration if pushFollowers is true
       if (this._pinOptions.pushFollowers) {
-        css[`padding${vertical ? 'Top' : 'Left'}`] = this.options.duration * this._progress;
-        css[`padding${vertical ? 'Bottom' : 'Right'}`] = this.options.duration * (1 - this._progress);
+        css[`padding${vertical ? 'Top' : 'Left'}`] =
+          this.options.duration * this._progress;
+        css[`padding${vertical ? 'Bottom' : 'Right'}`] =
+          this.options.duration * (1 - this._progress);
       }
 
       Util.css(this._pinOptions.spacer, css);
@@ -1077,27 +1212,49 @@ class Scene {
   }
 
   _updatePinInContainer() {
-    if (this._controller && this._pin && this._state === SCENE_STATE_DURING && !this._controller.info('isDocument')) {
+    if (
+      this._controller &&
+      this._pin &&
+      this._state === SCENE_STATE_DURING &&
+      !this._controller.info('isDocument')
+    ) {
       this._updatePinState();
     }
   }
 
   _updateRelativePinSpacer() {
-    if (this._controller && this._pin &&
-      this._state === SCENE_STATE_DURING && // element in pinned state?
-      ( // is width or height relatively sized, but not in relation to body? then we need to recalc.
-        ((this._pinOptions.relSize.width || this._pinOptions.relSize.autoFullWidth) && Util.width(window) !== Util.width(this._pinOptions.spacer.parentNode)) ||
-        (this._pinOptions.relSize.height && Util.height(window) !== Util.height(this._pinOptions.spacer.parentNode))
-      )
+    if (
+      this._controller &&
+      this._pin &&
+      this._state === SCENE_STATE_DURING && // element in pinned state? // is width or height relatively sized, but not in relation to body? then we need to recalc.
+      (((this._pinOptions.relSize.width ||
+        this._pinOptions.relSize.autoFullWidth) &&
+        Util.width(window) !==
+          Util.width(this._pinOptions.spacer.parentNode)) ||
+        (this._pinOptions.relSize.height &&
+          Util.height(window) !==
+            Util.height(this._pinOptions.spacer.parentNode)))
     ) {
       this._updatePinDimensions();
     }
   }
 
   _onMousewheelOverPin(event) {
-    if (this._controller && this._pin && this._state === SCENE_STATE_DURING && !this._controller.info('isDocument')) { // in pin state
+    if (
+      this._controller &&
+      this._pin &&
+      this._state === SCENE_STATE_DURING &&
+      !this._controller.info('isDocument')
+    ) {
+      // in pin state
       event.preventDefault();
-      this._controller._setScrollPos(this._controller.info('scrollPos') - ((event.wheelDelta || event[this._controller.info('vertical') ? 'wheelDeltaY' : 'wheelDeltaX']) / 3 || -event.detail * 30));
+      this._controller._setScrollPos(
+        this._controller.info('scrollPos') -
+          ((event.wheelDelta ||
+            event[
+              this._controller.info('vertical') ? 'wheelDeltaY' : 'wheelDeltaX'
+            ]) / 3 || -event.detail * 30)
+      );
     }
   }
 
@@ -1113,15 +1270,21 @@ class Scene {
     element = Util.elements(element)[0];
 
     if (!element) {
-      Log.log(1, "ERROR calling method 'setPin()': Invalid pin element supplied");
+      Log.log(
+        1,
+        "ERROR calling method 'setPin()': Invalid pin element supplied"
+      );
       return this; // cancel
-
     } else if (Util.css(element).position === 'fixed') {
-      Log.log(1, "ERROR calling method 'setPin()': Pin does not work with elements that are positioned 'fixed'");
+      Log.log(
+        1,
+        "ERROR calling method 'setPin()': Pin does not work with elements that are positioned 'fixed'"
+      );
       return this; // cancel
     }
 
-    if (this._pin) { // preexisting pin?
+    if (this._pin) {
+      // preexisting pin?
       if (this._pin === element) {
         // same pin we already have -> do nothing
         return this; // cancel
@@ -1132,30 +1295,54 @@ class Scene {
     this._pin = element;
 
     const parentDisplay = Util.css(this._pin.parentNode).display;
-    const boundsParams = ['top', 'left', 'bottom', 'right', 'margin', 'marginLeft', 'marginRight', 'marginTop', 'marginBottom'];
+    const boundsParams = [
+      'top',
+      'left',
+      'bottom',
+      'right',
+      'margin',
+      'marginLeft',
+      'marginRight',
+      'marginTop',
+      'marginBottom',
+    ];
 
     this._pin.parentNode.style.display = 'none'; // hack start to force css to return stylesheet values instead of calculated px values.
 
     const inFlow = Util.css(this._pin).position !== 'absolute';
-    const pinCSS = _.pick(Util.css(this._pin), boundsParams.concat(['display']));
+    const pinCSS = _.pick(
+      Util.css(this._pin),
+      boundsParams.concat(['display'])
+    );
     const sizeCSS = _.pick(Util.css(this._pin), ['width', 'height']);
 
     this._pin.parentNode.style.display = parentDisplay; // hack end.
 
     if (!inFlow && settings.pushFollowers) {
-      Log.log(2, 'WARNING: If the pinned element is positioned absolutely pushFollowers will be disabled.');
+      Log.log(
+        2,
+        'WARNING: If the pinned element is positioned absolutely pushFollowers will be disabled.'
+      );
       settings.pushFollowers = false;
     }
 
     // wait until all finished, because with responsive duration it will only be set after scene is added to controller
     window.setTimeout(() => {
       if (this._pin && this.options.duration === 0 && settings.pushFollowers) {
-        Log.log(2, 'WARNING: pushFollowers =', true, 'has no effect, when scene duration is 0.');
+        Log.log(
+          2,
+          'WARNING: pushFollowers =',
+          true,
+          'has no effect, when scene duration is 0.'
+        );
       }
     }, 0);
 
     // create spacer and insert
-    const spacer = this._pin.parentNode.insertBefore(document.createElement('div'), this._pin);
+    const spacer = this._pin.parentNode.insertBefore(
+      document.createElement('div'),
+      this._pin
+    );
     const spacerCSS = _.merge(pinCSS, {
       position: inFlow ? 'relative' : 'absolute',
       boxSizing: 'content-box',
@@ -1163,7 +1350,8 @@ class Scene {
       webkitBoxSizing: 'content-box',
     });
 
-    if (!inFlow) { // copy size if positioned absolutely, to work for bottom/right positioned elements.
+    if (!inFlow) {
+      // copy size if positioned absolutely, to work for bottom/right positioned elements.
       _.merge(spacerCSS, sizeCSS);
     }
 
@@ -1174,10 +1362,14 @@ class Scene {
     // set the pin Options
     this._pinOptions = {
       spacer,
-      relSize: { // save if size is defined using % values. if so, handle spacer resize differently...
+      relSize: {
+        // save if size is defined using % values. if so, handle spacer resize differently...
         width: sizeCSS.width.slice(-1) === '%',
         height: sizeCSS.height.slice(-1) === '%',
-        autoFullWidth: sizeCSS.width === 'auto' && inFlow && Util.marginCollapse(pinCSS.display),
+        autoFullWidth:
+          sizeCSS.width === 'auto' &&
+          inFlow &&
+          Util.marginCollapse(pinCSS.display),
       },
       pushFollowers: settings.pushFollowers,
       inFlow, // stores if the element takes up space in the document flow
@@ -1186,8 +1378,15 @@ class Scene {
     if (!this._pin.___origStyle) {
       this._pin.___origStyle = {};
       const pinInlineStyle = this._pin.style;
-      const copyStyles = boundsParams.concat(['width', 'height', 'position', 'boxSizing', 'mozBoxSizing', 'webkitBoxSizing']);
-      copyStyles.forEach((val) => {
+      const copyStyles = boundsParams.concat([
+        'width',
+        'height',
+        'position',
+        'boxSizing',
+        'mozBoxSizing',
+        'webkitBoxSizing',
+      ]);
+      copyStyles.forEach(val => {
         this._pin.___origStyle[val] = pinInlineStyle[val] || '';
       });
     }
@@ -1212,7 +1411,10 @@ class Scene {
       right: 'auto',
     });
 
-    if (this._pinOptions.relSize.width || this._pinOptions.relSize.autoFullWidth) {
+    if (
+      this._pinOptions.relSize.width ||
+      this._pinOptions.relSize.autoFullWidth
+    ) {
       Util.css(this._pin, {
         boxSizing: 'border-box',
         mozBoxSizing: 'border-box',
@@ -1221,12 +1423,26 @@ class Scene {
     }
 
     // add listener to document to update pin position in case controller is not the document.
-    window.addEventListener('scroll', this._updatePinInContainer.bind(this), { passive: true });
-    window.addEventListener('resize', this._updatePinInContainer.bind(this), { passive: true });
-    window.addEventListener('resize', this._updateRelativePinSpacer.bind(this), { passive: true });
+    window.addEventListener('scroll', this._updatePinInContainer.bind(this), {
+      passive: true,
+    });
+    window.addEventListener('resize', this._updatePinInContainer.bind(this), {
+      passive: true,
+    });
+    window.addEventListener(
+      'resize',
+      this._updateRelativePinSpacer.bind(this),
+      { passive: true }
+    );
     // add mousewheel listener to catch scrolls over fixed elements
-    this._pin.addEventListener('mousewheel', this._onMousewheelOverPin.bind(this));
-    this._pin.addEventListener('DOMMouseScroll', this._onMousewheelOverPin.bind(this));
+    this._pin.addEventListener(
+      'mousewheel',
+      this._onMousewheelOverPin.bind(this)
+    );
+    this._pin.addEventListener(
+      'DOMMouseScroll',
+      this._onMousewheelOverPin.bind(this)
+    );
 
     Log.log(3, 'added pin');
 
@@ -1241,30 +1457,60 @@ class Scene {
       if (this._state === SCENE_STATE_DURING) {
         this._updatePinState(true); // force unpin at position
       }
-      if (reset || !this._controller) { // if there's no controller no progress was made anyway...
+      if (reset || !this._controller) {
+        // if there's no controller no progress was made anyway...
         const pinTarget = this._pinOptions.spacer.firstChild; // usually the pin element, but may be another spacer (cascaded pins)...
-        if (pinTarget.hasAttribute(PIN_SPACER_ATTRIBUTE)) { // copy margins to child spacer
+        if (pinTarget.hasAttribute(PIN_SPACER_ATTRIBUTE)) {
+          // copy margins to child spacer
           const inlineStyle = this._pinOptions.spacer.style;
-          const values = ['margin', 'marginLeft', 'marginRight', 'marginTop', 'marginBottom'];
+          const values = [
+            'margin',
+            'marginLeft',
+            'marginRight',
+            'marginTop',
+            'marginBottom',
+          ];
           const margins = {};
-          values.forEach((val) => {
+          values.forEach(val => {
             margins[val] = inlineStyle[val] || '';
           });
           Util.css(pinTarget, margins);
         }
-        this._pinOptions.spacer.parentNode.insertBefore(pinTarget, this._pinOptions.spacer);
+        this._pinOptions.spacer.parentNode.insertBefore(
+          pinTarget,
+          this._pinOptions.spacer
+        );
         this._pinOptions.spacer.parentNode.removeChild(this._pinOptions.spacer);
-        if (!this._pin.parentNode.hasAttribute(PIN_SPACER_ATTRIBUTE)) { // if it's the last pin for this element -> restore inline styles
+        if (!this._pin.parentNode.hasAttribute(PIN_SPACER_ATTRIBUTE)) {
+          // if it's the last pin for this element -> restore inline styles
           // TODO: only correctly set for first pin (when cascading) - how to fix?
           Util.css(this._pin, this._pin.___origStyle);
           delete this._pin.___origStyle;
         }
       }
-      window.removeEventListener('scroll', this._updatePinInContainer.bind(this), { passive: true });
-      window.removeEventListener('resize', this._updatePinInContainer.bind(this), { passive: true });
-      window.removeEventListener('resize', this._updateRelativePinSpacer.bind(this), { passive: true });
-      this._pin.removeEventListener('mousewheel', this._onMousewheelOverPin.bind(this));
-      this._pin.removeEventListener('DOMMouseScroll', this._onMousewheelOverPin.bind(this));
+      window.removeEventListener(
+        'scroll',
+        this._updatePinInContainer.bind(this),
+        { passive: true }
+      );
+      window.removeEventListener(
+        'resize',
+        this._updatePinInContainer.bind(this),
+        { passive: true }
+      );
+      window.removeEventListener(
+        'resize',
+        this._updateRelativePinSpacer.bind(this),
+        { passive: true }
+      );
+      this._pin.removeEventListener(
+        'mousewheel',
+        this._onMousewheelOverPin.bind(this)
+      );
+      this._pin.removeEventListener(
+        'DOMMouseScroll',
+        this._onMousewheelOverPin.bind(this)
+      );
       this._pin = null;
       this._pinOptions.spacer = null;
       Log.log(3, `removed pin (reset: ${reset ? 'true' : 'false'})`);
@@ -1277,7 +1523,12 @@ class Scene {
   setClassToggle(element, classes) {
     const els = Util.elements(element);
     if (els.length === 0 || !_.isString(classes)) {
-      Log.log(1, `ERROR calling method 'setClassToggle()': Invalid ${els.length === 0 ? 'element' : 'classes'} supplied.`);
+      Log.log(
+        1,
+        `ERROR calling method 'setClassToggle()': Invalid ${
+          els.length === 0 ? 'element' : 'classes'
+        } supplied.`
+      );
       return this;
     }
     if (this._cssClassElems.length > 0) {
@@ -1286,9 +1537,11 @@ class Scene {
     }
     this._cssClasses = classes;
     this._cssClassElems = els;
-    this.on('enter.internal_class leave.internal_class', (event) => {
-      this._cssClassElems.forEach((el) => {
-        el.classList[event.type === 'enter' ? 'add' : 'remove'](this._cssClasses);
+    this.on('enter.internal_class leave.internal_class', event => {
+      this._cssClassElems.forEach(el => {
+        el.classList[event.type === 'enter' ? 'add' : 'remove'](
+          this._cssClasses
+        );
       });
     });
     return this;
@@ -1296,7 +1549,7 @@ class Scene {
 
   removeClassToggle(reset) {
     if (reset) {
-      this._cssClassElems.forEach((el) => {
+      this._cssClassElems.forEach(el => {
         el.classList.remove(this._cssClasses);
       });
     }
@@ -1319,13 +1572,16 @@ class Scene {
         } else if (state !== 'DURING' && !this._tween.paused()) {
           this._tween.pause();
         }
-      } else if (progress !== this._tween.progress()) { // do we even need to update the progress?
+      } else if (progress !== this._tween.progress()) {
+        // do we even need to update the progress?
         // no infinite loop - so should we just play or go to a specific point in time?
         if (this.duration() === 0) {
           // play the animation
-          if (progress > 0) { // play from 0 to 1
+          if (progress > 0) {
+            // play from 0 to 1
             this._tween.play();
-          } else { // play from 1 to 0
+          } else {
+            // play from 1 to 0
             this._tween.reverse();
           }
         } else {
@@ -1354,13 +1610,18 @@ class Scene {
     try {
       // wrap Tween into a Timeline Object if available to include delay and repeats in the duration and standardize methods.
       if (window.TimelineMax) {
-        newTween = new window.TimelineMax({ smoothChildTiming: true }).add(TweenObject);
+        newTween = new window.TimelineMax({ smoothChildTiming: true }).add(
+          TweenObject
+        );
       } else {
         newTween = TweenObject;
       }
       newTween.pause();
     } catch (event) {
-      Log.log(1, "ERROR calling method 'setTween()': Supplied argument is not a valid TweenObject");
+      Log.log(
+        1,
+        "ERROR calling method 'setTween()': Supplied argument is not a valid TweenObject"
+      );
       return this;
     }
 
@@ -1402,8 +1663,14 @@ class Scene {
     if (!this._indicator) {
       this._indicator = new Indicator(this, options);
 
-      this.on('add.plugin_addIndicators', this._indicator.add.bind(this._indicator));
-      this.on('remove.plugin_addIndicators', this._indicator.remove.bind(this._indicator));
+      this.on(
+        'add.plugin_addIndicators',
+        this._indicator.add.bind(this._indicator)
+      );
+      this.on(
+        'remove.plugin_addIndicators',
+        this._indicator.remove.bind(this._indicator)
+      );
       this.on('destroy.plugin_addIndicators', this.removeIndicators.bind(this));
 
       // it the scene already has a controller we can start right away.
@@ -1452,11 +1719,17 @@ class Controller {
     this.options.container = Util.elements(this.options.container)[0];
 
     if (!this.options.container) {
-      Log.log(1, `ERROR creating object ${NAMESPACE$1}: No valid scroll container supplied`);
+      Log.log(
+        1,
+        `ERROR creating object ${NAMESPACE$1}: No valid scroll container supplied`
+      );
       throw Error(`${NAMESPACE$1} init failed`);
     }
 
-    this._isDocument = this.options.container === window || this.options.container === document.body || !document.body.contains(this.options.container);
+    this._isDocument =
+      this.options.container === window ||
+      this.options.container === document.body ||
+      !document.body.contains(this.options.container);
     this._sceneObjects = [];
     this._updateScenesOnNextCycle = false;
     this._scrollPos = 0;
@@ -1475,11 +1748,21 @@ class Controller {
     this._viewportSize = this._getViewportSize();
 
     // set event handlers
-    this.options.container.addEventListener('resize', this._onChange.bind(this), { passive: true });
-    this.options.container.addEventListener('scroll', this._onChange.bind(this), { passive: true });
+    this.options.container.addEventListener(
+      'resize',
+      this._onChange.bind(this),
+      { passive: true }
+    );
+    this.options.container.addEventListener(
+      'scroll',
+      this._onChange.bind(this),
+      { passive: true }
+    );
 
     const ri = parseInt(this.options.refreshInterval, 10);
-    this.options.refreshInterval = _.isNumber(ri) ? ri : DEFAULT_CONTROLLER_OPTIONS.refreshInterval;
+    this.options.refreshInterval = _.isNumber(ri)
+      ? ri
+      : DEFAULT_CONTROLLER_OPTIONS.refreshInterval;
     this._scheduleRefresh();
 
     // indicators
@@ -1492,14 +1775,34 @@ class Controller {
     };
 
     if (this.options.addIndicators) {
-      this._container.addEventListener('resize', this._handleTriggerPositionChange.bind(this), { passive: true });
+      this._container.addEventListener(
+        'resize',
+        this._handleTriggerPositionChange.bind(this),
+        { passive: true }
+      );
       if (!this._isDocument) {
-        window.addEventListener('resize', this._handleTriggerPositionChange.bind(this), { passive: true });
-        window.addEventListener('scroll', this._handleTriggerPositionChange.bind(this), { passive: true });
+        window.addEventListener(
+          'resize',
+          this._handleTriggerPositionChange.bind(this),
+          { passive: true }
+        );
+        window.addEventListener(
+          'scroll',
+          this._handleTriggerPositionChange.bind(this),
+          { passive: true }
+        );
       }
       // update all related bounds containers
-      this._container.addEventListener('resize', this._handleBoundsPositionChange.bind(this), { passive: true });
-      this._container.addEventListener('scroll', this._handleBoundsPositionChange.bind(this), { passive: true });
+      this._container.addEventListener(
+        'resize',
+        this._handleBoundsPositionChange.bind(this),
+        { passive: true }
+      );
+      this._container.addEventListener(
+        'scroll',
+        this._handleBoundsPositionChange.bind(this),
+        { passive: true }
+      );
     }
 
     Log.log(3, `added new ${NAMESPACE$1}`);
@@ -1507,18 +1810,25 @@ class Controller {
 
   _scheduleRefresh() {
     if (this.options.refreshInterval > 0 && this._sceneObjects.length) {
-      this._refreshTimeout = window.setTimeout(this._refresh.bind(this), this.options.refreshInterval);
+      this._refreshTimeout = window.setTimeout(
+        this._refresh.bind(this),
+        this.options.refreshInterval
+      );
     } else {
       this._refreshTimeout = null;
     }
   }
 
   _getScrollPos() {
-    return this.options.vertical ? Util.scrollTop(this.options.container) : Util.scrollLeft(this.options.container);
+    return this.options.vertical
+      ? Util.scrollTop(this.options.container)
+      : Util.scrollLeft(this.options.container);
   }
 
   _getViewportSize() {
-    return this.options.vertical ? Util.height(this.options.container) : Util.width(this.options.container);
+    return this.options.vertical
+      ? Util.height(this.options.container)
+      : Util.width(this.options.container);
   }
 
   _setScrollPos(pos) {
@@ -1538,7 +1848,9 @@ class Controller {
   _updateScenes() {
     if (this._enabled && this._updateScenesOnNextCycle) {
       // determine scenes to update
-      const scenesToUpdate = _.isArray(this._updateScenesOnNextCycle) ? this._updateScenesOnNextCycle : this._sceneObjects.slice(0);
+      const scenesToUpdate = _.isArray(this._updateScenesOnNextCycle)
+        ? this._updateScenesOnNextCycle
+        : this._sceneObjects.slice(0);
 
       // reset scenes
       this._updateScenesOnNextCycle = false;
@@ -1550,8 +1862,10 @@ class Controller {
 
       const deltaScroll = this._scrollPos - oldScrollPos;
 
-      if (deltaScroll !== 0) { // scroll position changed?
-        this._scrollDirection = (deltaScroll > 0) ? SCROLL_DIRECTION_FORWARD : SCROLL_DIRECTION_REVERSE;
+      if (deltaScroll !== 0) {
+        // scroll position changed?
+        this._scrollDirection =
+          deltaScroll > 0 ? SCROLL_DIRECTION_FORWARD : SCROLL_DIRECTION_REVERSE;
       }
 
       // reverse order of scenes if scrolling reverse
@@ -1561,7 +1875,12 @@ class Controller {
 
       // update scenes
       scenesToUpdate.forEach((scene, index) => {
-        Log.log(3, `updating scene ${index + 1}/${scenesToUpdate.length} (${this._sceneObjects.length} total)`);
+        Log.log(
+          3,
+          `updating scene ${index + 1}/${scenesToUpdate.length} (${
+            this._sceneObjects.length
+          } total)`
+        );
         scene.update(true);
       });
 
@@ -1573,7 +1892,9 @@ class Controller {
 
   _debounceUpdate() {
     if (this._sceneObjects.length) {
-      this._updateTimeout = window.requestAnimationFrame(this._updateScenes.bind(this));
+      this._updateTimeout = window.requestAnimationFrame(
+        this._updateScenes.bind(this)
+      );
     } else {
       this._updateTimeout = null;
     }
@@ -1606,8 +1927,12 @@ class Controller {
       if (this._viewportSize !== this._getViewportSize()) {
         let resizeEvent;
         try {
-          resizeEvent = new Event('resize', { bubbles: false, cancelable: false });
-        } catch (event) { // stupid IE
+          resizeEvent = new Event('resize', {
+            bubbles: false,
+            cancelable: false,
+          });
+        } catch (event) {
+          // stupid IE
           resizeEvent = document.createEvent('Event');
           resizeEvent.initEvent('resize', false, false);
         }
@@ -1616,7 +1941,7 @@ class Controller {
     }
 
     // refresh all scenes
-    this._sceneObjects.forEach((scene) => {
+    this._sceneObjects.forEach(scene => {
       scene.refresh();
     });
 
@@ -1634,24 +1959,23 @@ class Controller {
 
   addScene(newScene) {
     if (_.isArray(newScene)) {
-      newScene.forEach((scene) => {
+      newScene.forEach(scene => {
         this.addScene(scene);
       });
-
     } else if (newScene.controller() !== this) {
       newScene.addTo(this);
-
     } else if (!this._sceneObjects.includes(newScene)) {
       this._sceneObjects.push(newScene);
 
       this._sceneObjects = this._sortScenes(this._sceneObjects);
 
-      newScene.on('shift.controller_sort', () => { // resort whenever scene moves
+      newScene.on('shift.controller_sort', () => {
+        // resort whenever scene moves
         this._sceneObjects = this._sortScenes(this._sceneObjects);
       });
 
       // insert global defaults
-      Object.keys(this.options.globalSceneOptions).forEach((key) => {
+      Object.keys(this.options.globalSceneOptions).forEach(key => {
         if (newScene[key]) {
           newScene[key].call(newScene, this.options.globalSceneOptions[key]);
         }
@@ -1674,10 +1998,9 @@ class Controller {
 
   removeScene(scene) {
     if (_.isArray(scene)) {
-      scene.forEach((_scene) => {
+      scene.forEach(_scene => {
         this.removeScene(_scene);
       });
-
     } else {
       const index = this._sceneObjects.indexOf(scene);
 
@@ -1696,14 +2019,13 @@ class Controller {
 
   updateScene(scene, immediately) {
     if (_.isArray(scene)) {
-      scene.forEach((_scene) => {
+      scene.forEach(_scene => {
         this.updateScene(_scene, immediately);
       });
-
     } else if (immediately) {
       scene.update(true);
 
-    // if this._updateScenesOnNextCycle is true, all connected scenes are already scheduled for update
+      // if this._updateScenesOnNextCycle is true, all connected scenes are already scheduled for update
     } else if (this._updateScenesOnNextCycle !== true) {
       // prep array for next update cycle
       this._updateScenesOnNextCycle = this._updateScenesOnNextCycle || [];
@@ -1712,7 +2034,9 @@ class Controller {
         this._updateScenesOnNextCycle.push(scene);
       }
 
-      this._updateScenesOnNextCycle = this._sortScenes(this._updateScenesOnNextCycle);
+      this._updateScenesOnNextCycle = this._sortScenes(
+        this._updateScenesOnNextCycle
+      );
 
       this._debounceUpdate();
     }
@@ -1731,11 +2055,13 @@ class Controller {
 
   scrollTo(scrollTarget, additionalParameter) {
     if (_.isNumber(scrollTarget)) {
-      this._setScrollPos.call(this.options.container, scrollTarget, additionalParameter);
-
+      this._setScrollPos.call(
+        this.options.container,
+        scrollTarget,
+        additionalParameter
+      );
     } else if (_.isFunction(scrollTarget)) {
       this._setScrollPos = scrollTarget;
-
     } else if (_.isElement(scrollTarget)) {
       // if parent is pin spacer, use spacer position instead
       // so correct start position is returned for pinned elements
@@ -1757,13 +2083,19 @@ class Controller {
         containerOffset[offset] -= this.scrollPos();
       }
 
-      this.scrollTo(elementOffset[offset] - containerOffset[offset], additionalParameter);
-
+      this.scrollTo(
+        elementOffset[offset] - containerOffset[offset],
+        additionalParameter
+      );
     } else if (scrollTarget instanceof Scene) {
       if (scrollTarget.controller() === this) {
         this.scrollTo(scrollTarget.scrollOffset(), additionalParameter);
       } else {
-        Log.log(2, 'scrollTo(): The supplied scene does not belong to this controller, scroll cancelled', scrollTarget);
+        Log.log(
+          2,
+          'scrollTo(): The supplied scene does not belong to this controller, scroll cancelled',
+          scrollTarget
+        );
       }
     }
 
@@ -1778,7 +2110,10 @@ class Controller {
     if (_.isFunction(scrollPosMethod)) {
       this._getScrollPos = scrollPosMethod;
     } else {
-      Log.log(2, 'Provided value for method \'scrollPos()\' is not a function, to change the current scroll position use \'scrollTo()\'');
+      Log.log(
+        2,
+        "Provided value for method 'scrollPos()' is not a function, to change the current scroll position use 'scrollTo()'"
+      );
     }
 
     return this;
@@ -1804,7 +2139,6 @@ class Controller {
   loglevel(newLoglevel) {
     if (!arguments.length) {
       return this.options.loglevel;
-
     } else if (this.options.loglevel !== newLoglevel) {
       this.options.loglevel = newLoglevel;
     }
@@ -1815,7 +2149,6 @@ class Controller {
   enabled(newState) {
     if (!arguments.length) {
       return this._enabled;
-
     } else if (this._enabled !== newState) {
       this._enabled = !!newState;
 
@@ -1832,22 +2165,53 @@ class Controller {
 
     sceneObjectsTmp.forEach(scene => scene.destroy(resetScenes));
 
-    this.options.container.removeEventListener('resize', this._onChange.bind(this), { passive: true });
-    this.options.container.removeEventListener('scroll', this._onChange.bind(this), { passive: true });
+    this.options.container.removeEventListener(
+      'resize',
+      this._onChange.bind(this),
+      { passive: true }
+    );
+    this.options.container.removeEventListener(
+      'scroll',
+      this._onChange.bind(this),
+      { passive: true }
+    );
 
     window.cancelAnimationFrame(this._updateTimeout);
 
-    Log.log(3, `destroyed ${NAMESPACE$1} (reset: ${resetScenes ? 'true' : 'false'})`);
+    Log.log(
+      3,
+      `destroyed ${NAMESPACE$1} (reset: ${resetScenes ? 'true' : 'false'})`
+    );
 
     // indicators
     if (this.options.addIndicators) {
-      this._container.removeEventListener('resize', this._handleTriggerPositionChange.bind(this), { passive: true });
+      this._container.removeEventListener(
+        'resize',
+        this._handleTriggerPositionChange.bind(this),
+        { passive: true }
+      );
       if (!this._isDocument) {
-        window.removeEventListener('resize', this._handleTriggerPositionChange.bind(this), { passive: true });
-        window.removeEventListener('scroll', this._handleTriggerPositionChange.bind(this), { passive: true });
+        window.removeEventListener(
+          'resize',
+          this._handleTriggerPositionChange.bind(this),
+          { passive: true }
+        );
+        window.removeEventListener(
+          'scroll',
+          this._handleTriggerPositionChange.bind(this),
+          { passive: true }
+        );
       }
-      this._container.removeEventListener('resize', this._handleBoundsPositionChange.bind(this), { passive: true });
-      this._container.removeEventListener('scroll', this._handleBoundsPositionChange.bind(this), { passive: true });
+      this._container.removeEventListener(
+        'resize',
+        this._handleBoundsPositionChange.bind(this),
+        { passive: true }
+      );
+      this._container.removeEventListener(
+        'scroll',
+        this._handleBoundsPositionChange.bind(this),
+        { passive: true }
+      );
     }
 
     return null;
@@ -1864,7 +2228,7 @@ class Controller {
   _handleTriggerPositionChange() {
     this.updateTriggerGroupPositions();
 
-    this._sceneObjects.forEach((scene) => {
+    this._sceneObjects.forEach(scene => {
       if (scene._indicator) {
         scene._indicator._updateBounds();
       }
@@ -1874,25 +2238,33 @@ class Controller {
   // updates the position of the bounds container to aligned to the right for vertical containers and to the bottom for horizontal
   updateBoundsPositions(specificIndicator) {
     // constant for all bounds
-    const groups = specificIndicator ?
-      [_.merge({}, specificIndicator.triggerGroup, { members: [specificIndicator] })] : // create a group with only one element
-      this._indicators.groups; // use all
+    const groups = specificIndicator
+      ? [
+          _.merge({}, specificIndicator.triggerGroup, {
+            members: [specificIndicator],
+          }),
+        ] // create a group with only one element
+      : this._indicators.groups; // use all
     let groupsCount = groups.length;
     const pos = this._vertical ? 'left' : 'top';
     const dimension = this._vertical ? 'width' : 'height';
-    const edge = this._vertical ?
-      Util.scrollLeft(this._container) + (Util.width(this._container) - EDGE_OFFSET) :
-      Util.scrollTop(this._container) + (Util.height(this._container) - EDGE_OFFSET);
+    const edge = this._vertical
+      ? Util.scrollLeft(this._container) +
+        (Util.width(this._container) - EDGE_OFFSET)
+      : Util.scrollTop(this._container) +
+        (Util.height(this._container) - EDGE_OFFSET);
     let boundsCount;
     let triggerSize;
     let group;
 
-    while (groupsCount--) { // group loop
+    while (groupsCount--) {
+      // group loop
       group = groups[groupsCount];
       boundsCount = group.members.length;
       triggerSize = Util[dimension](group.element.firstChild);
 
-      while (boundsCount--) { // indicators loop
+      while (boundsCount--) {
+        // indicators loop
         const boundsCss = {};
         boundsCss[pos] = edge - triggerSize;
         Util.css(group.members[boundsCount].bounds, boundsCss);
@@ -1906,10 +2278,12 @@ class Controller {
     const groups = specificGroup ? [specificGroup] : this._indicators.groups;
     let i = groups.length;
     const container = this._isDocument ? document.body : this._container;
-    const containerOffset = this._isDocument ? { top: 0, left: 0 } : Util.offset(container, true);
-    const edge = this._vertical ?
-      Util.width(this._container) - EDGE_OFFSET :
-      Util.height(this._container) - EDGE_OFFSET;
+    const containerOffset = this._isDocument
+      ? { top: 0, left: 0 }
+      : Util.offset(container, true);
+    const edge = this._vertical
+      ? Util.width(this._container) - EDGE_OFFSET
+      : Util.height(this._container) - EDGE_OFFSET;
     const dimension = this._vertical ? 'width' : 'height';
     const transformAxis = this._vertical ? 'Y' : 'X';
 
@@ -1927,8 +2301,12 @@ class Controller {
       transform = pos > elSize ? `translate${transformAxis}(-100%)` : '';
 
       Util.css(el, {
-        top: containerOffset.top + (this._vertical ? pos : edge - group.members[0].options.indent),
-        left: containerOffset.left + (this._vertical ? edge - group.members[0].options.indent : pos),
+        top:
+          containerOffset.top +
+          (this._vertical ? pos : edge - group.members[0].options.indent),
+        left:
+          containerOffset.left +
+          (this._vertical ? edge - group.members[0].options.indent : pos),
       });
 
       Util.css(el.firstChild.firstChild, { transform });
@@ -1937,18 +2315,19 @@ class Controller {
 
   // updates the label for the group to contain the name, if it only has one member
   updateTriggerGroupLabel(group) {
-    const text = `trigger${group.members.length > 1 ? '' : ` ${group.members[0].options.name}`}`;
+    const text = `trigger${
+      group.members.length > 1 ? '' : ` ${group.members[0].options.name}`
+    }`;
     const elem = group.element.firstChild.firstChild;
     const doUpdate = elem.textContent !== text;
     if (doUpdate) {
       elem.textContent = text;
-      if (this._vertical) { // bounds position is dependent on text length, so update
+      if (this._vertical) {
+        // bounds position is dependent on text length, so update
         this.updateBoundsPositions();
       }
     }
   }
 }
-
-/* eslint-env browser */
 
 export { Controller, Scene };

@@ -140,7 +140,9 @@ class Indicator {
 
     if (!this._boundsContainer) {
       // no parent supplied or doesnt exist
-      this._boundsContainer = isDocument ? document.body : this._ctrl.info('container'); // check if window/document (then use body)
+      this._boundsContainer = isDocument
+        ? document.body
+        : this._ctrl.info('container'); // check if window/document (then use body)
     }
     if (!isDocument && Util.css(this._boundsContainer).position === 'static') {
       // position mode needed for correct positioning of indicators
@@ -148,14 +150,21 @@ class Indicator {
     }
 
     // add listeners for updates
-    this.scene.on('change.plugin_addIndicators', this._handleTriggerParamsChange.bind(this));
-    this.scene.on('shift.plugin_addIndicators', this._handleBoundsParamsChange.bind(this));
+    this.scene.on(
+      'change.plugin_addIndicators',
+      this._handleTriggerParamsChange.bind(this)
+    );
+    this.scene.on(
+      'shift.plugin_addIndicators',
+      this._handleBoundsParamsChange.bind(this)
+    );
 
     // updates trigger & bounds (will add elements if needed)
     this._updateTriggerGroup();
     this._updateBounds();
 
-    setTimeout(() => { // do after all execution is finished otherwise sometimes size calculations are off
+    setTimeout(() => {
+      // do after all execution is finished otherwise sometimes size calculations are off
       this._ctrl.updateBoundsPositions(this);
     }, 0);
 
@@ -164,9 +173,16 @@ class Indicator {
 
   // remove indicators from DOM
   remove() {
-    if (this.triggerGroup) { // if not set there's nothing to remove
-      this.scene.off('change.plugin_addIndicators', this._handleTriggerParamsChange);
-      this.scene.off('shift.plugin_addIndicators', this._handleBoundsParamsChange);
+    if (this.triggerGroup) {
+      // if not set there's nothing to remove
+      this.scene.off(
+        'change.plugin_addIndicators',
+        this._handleTriggerParamsChange
+      );
+      this.scene.off(
+        'shift.plugin_addIndicators',
+        this._handleBoundsParamsChange
+      );
 
       if (this.triggerGroup.members.length > 1) {
         // just remove from memberlist of old group
@@ -264,7 +280,10 @@ class Indicator {
   }
 
   _removeTriggerGroup() {
-    this._ctrl._indicators.groups.splice(this._ctrl._indicators.groups.indexOf(this.triggerGroup), 1);
+    this._ctrl._indicators.groups.splice(
+      this._ctrl._indicators.groups.indexOf(this.triggerGroup),
+      1
+    );
     this.triggerGroup.element.parentNode.removeChild(this.triggerGroup.element);
     this.triggerGroup = null;
   }
@@ -293,13 +312,18 @@ class Indicator {
       if (Math.abs(group.triggerHook - triggerHook) < closeEnough) {
         // found a match!
         // Log.log(0, "trigger", options.name, "->", "found match");
-        if (this.triggerGroup) { // do I have an old group that is out of sync?
-          if (this.triggerGroup.members.length === 1) { // is it the only remaining group?
+        if (this.triggerGroup) {
+          // do I have an old group that is out of sync?
+          if (this.triggerGroup.members.length === 1) {
+            // is it the only remaining group?
             // Log.log(0, "trigger", options.name, "->", "kill");
             // was the last member, remove the whole group
             this._removeTriggerGroup();
           } else {
-            this.triggerGroup.members.splice(this.triggerGroup.members.indexOf(this), 1); // just remove from memberlist of old group
+            this.triggerGroup.members.splice(
+              this.triggerGroup.members.indexOf(this),
+              1
+            ); // just remove from memberlist of old group
             this._ctrl.updateTriggerGroupLabel(this.triggerGroup);
             this._ctrl.updateTriggerGroupPositions(this.triggerGroup);
             // Log.log(0, "trigger", options.name, "->", "removing from previous member list");
@@ -323,7 +347,10 @@ class Indicator {
         return;
       }
       // Log.log(0, "trigger", options.name, "->", "removing from previous member list");
-      this.triggerGroup.members.splice(this.triggerGroup.members.indexOf(this), 1); // just remove from memberlist of old group
+      this.triggerGroup.members.splice(
+        this.triggerGroup.members.indexOf(this),
+        1
+      ); // just remove from memberlist of old group
       this._ctrl.updateTriggerGroupLabel(this.triggerGroup);
       this._ctrl.updateTriggerGroupPositions(this.triggerGroup);
       this.triggerGroup = null; // need a brand new group...
