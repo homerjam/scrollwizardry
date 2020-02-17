@@ -1,13 +1,14 @@
-/* eslint-env browser */
-
-import _ from 'lodash';
-
+// import { camelCase, forEach, isElement, isString } from 'lodash-es';
+import camelCase from 'lodash/camelCase';
+import forEach from 'lodash/forEach';
+import isElement from 'lodash/isElement';
+import isString from 'lodash/isString';
 class Util {
   static elements(selector = []) {
-    if (_.isString(selector)) {
+    if (isString(selector)) {
       return document.querySelectorAll(selector);
     }
-    if (_.isElement(selector) || selector === document || selector === window) {
+    if (isElement(selector) || selector === document || selector === window) {
       return [selector];
     }
     return selector;
@@ -53,12 +54,12 @@ class Util {
       return el.currentStyle ? el.currentStyle : window.getComputedStyle(el);
     }
 
-    _.forEach(css, (value, key) => {
+    forEach(css, (value, key) => {
       if (value === parseFloat(value)) {
         // assume pixel for seemingly numerical values
         value += 'px';
       }
-      el.style[_.camelCase(key)] = value;
+      el.style[camelCase(key)] = value;
     });
 
     return css;

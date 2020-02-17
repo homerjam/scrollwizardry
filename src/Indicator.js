@@ -1,6 +1,5 @@
-/* eslint-env browser */
-
-import _ from 'lodash';
+// import { merge } from 'lodash-es';
+import merge from 'lodash/merge';
 import Util from './Util';
 import Log from './Log';
 
@@ -102,7 +101,7 @@ class Indicator {
       colorTrigger: 'blue',
     };
 
-    options = _.merge({}, DEFAULT_INDICATOR_OPTIONS, options);
+    options = merge({}, DEFAULT_INDICATOR_OPTIONS, options);
 
     options.name = options.name || _autoindex;
 

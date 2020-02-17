@@ -1,6 +1,9 @@
-/* eslint-env browser */
-
-import _ from 'lodash';
+// import { merge, isArray, isElement, isFunction, isNumber } from 'lodash-es';
+import merge from 'lodash/merge';
+import isArray from 'lodash/isArray';
+import isElement from 'lodash/isElement';
+import isFunction from 'lodash/isFunction';
+import isNumber from 'lodash/isNumber';
 import Util from './Util';
 import Scene from './Scene';
 import Log from './Log';
@@ -26,7 +29,7 @@ class Controller {
       addIndicators: false,
     };
 
-    this.options = _.merge({}, DEFAULT_CONTROLLER_OPTIONS, options);
+    this.options = merge({}, DEFAULT_CONTROLLER_OPTIONS, options);
 
     this.options.container = Util.elements(this.options.container)[0];
 
@@ -72,7 +75,7 @@ class Controller {
     );
 
     const ri = parseInt(this.options.refreshInterval, 10);
-    this.options.refreshInterval = _.isNumber(ri)
+    this.options.refreshInterval = isNumber(ri)
       ? ri
       : DEFAULT_CONTROLLER_OPTIONS.refreshInterval;
     this._scheduleRefresh();
@@ -160,7 +163,7 @@ class Controller {
   _updateScenes() {
     if (this._enabled && this._updateScenesOnNextCycle) {
       // determine scenes to update
-      const scenesToUpdate = _.isArray(this._updateScenesOnNextCycle)
+      const scenesToUpdate = isArray(this._updateScenesOnNextCycle)
         ? this._updateScenesOnNextCycle
         : this._sceneObjects.slice(0);
 
@@ -270,7 +273,7 @@ class Controller {
   }
 
   addScene(newScene) {
-    if (_.isArray(newScene)) {
+    if (isArray(newScene)) {
       newScene.forEach(scene => {
         this.addScene(scene);
       });
@@ -309,7 +312,7 @@ class Controller {
   }
 
   removeScene(scene) {
-    if (_.isArray(scene)) {
+    if (isArray(scene)) {
       scene.forEach(_scene => {
         this.removeScene(_scene);
       });
@@ -330,7 +333,7 @@ class Controller {
   }
 
   updateScene(scene, immediately) {
-    if (_.isArray(scene)) {
+    if (isArray(scene)) {
       scene.forEach(_scene => {
         this.updateScene(_scene, immediately);
       });
@@ -366,15 +369,15 @@ class Controller {
   }
 
   scrollTo(scrollTarget, additionalParameter) {
-    if (_.isNumber(scrollTarget)) {
+    if (isNumber(scrollTarget)) {
       this._setScrollPos.call(
         this.options.container,
         scrollTarget,
         additionalParameter
       );
-    } else if (_.isFunction(scrollTarget)) {
+    } else if (isFunction(scrollTarget)) {
       this._setScrollPos = scrollTarget;
-    } else if (_.isElement(scrollTarget)) {
+    } else if (isElement(scrollTarget)) {
       // if parent is pin spacer, use spacer position instead
       // so correct start position is returned for pinned elements
       while (scrollTarget.parentNode.hasAttribute(PIN_SPACER_ATTRIBUTE)) {
@@ -419,7 +422,7 @@ class Controller {
       return this._getScrollPos.call(this);
     }
 
-    if (_.isFunction(scrollPosMethod)) {
+    if (isFunction(scrollPosMethod)) {
       this._getScrollPos = scrollPosMethod;
     } else {
       Log.log(
@@ -552,7 +555,7 @@ class Controller {
     // constant for all bounds
     const groups = specificIndicator
       ? [
-          _.merge({}, specificIndicator.triggerGroup, {
+          merge({}, specificIndicator.triggerGroup, {
             members: [specificIndicator],
           }),
         ] // create a group with only one element

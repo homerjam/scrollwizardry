@@ -1,6 +1,7 @@
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 import babel from 'rollup-plugin-babel';
+import { uglify } from 'rollup-plugin-uglify';
 import pkg from './package.json';
 
 export default [
@@ -12,9 +13,9 @@ export default [
       file: pkg.browser,
       format: 'umd',
       sourcemap: true,
-      globals: {
-        lodash: '_',
-      },
+      // globals: {
+      //   lodash: '_',
+      // },
     },
     plugins: [
       resolve(), // so Rollup can find `lodash`
@@ -22,6 +23,7 @@ export default [
       babel({
         exclude: 'node_modules/**',
       }),
+      uglify(),
     ],
   },
 
@@ -33,7 +35,17 @@ export default [
   // `file` and `format` for each target)
   {
     input: 'src/index.js',
-    external: ['lodash'],
+    external: [
+      'lodash/merge',
+      'lodash/isArray',
+      'lodash/isElement',
+      'lodash/isFunction',
+      'lodash/isNumber',
+      'lodash/isString',
+      'lodash/pick',
+      'lodash/camelCase',
+      'lodash/forEach',
+    ],
     output: [
       { file: pkg.main, format: 'cjs' },
       { file: pkg.module, format: 'es' },

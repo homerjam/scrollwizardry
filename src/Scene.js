@@ -1,6 +1,17 @@
-/* eslint-env browser */
-
-import _ from 'lodash';
+// import {
+//   merge,
+//   isArray,
+//   isFunction,
+//   isNumber,
+//   isString,
+//   pick,
+// } from 'lodash-es';
+import merge from 'lodash/merge';
+import isArray from 'lodash/isArray';
+import isFunction from 'lodash/isFunction';
+import isNumber from 'lodash/isNumber';
+import isString from 'lodash/isString';
+import pick from 'lodash/pick';
 import Util from './Util';
 import Event from './Event';
 import Indicator from './Indicator';
@@ -29,7 +40,7 @@ const DEFAULT_SCENE_OPTIONS = {
 
 class Scene {
   constructor(options) {
-    this.options = _.merge({}, DEFAULT_SCENE_OPTIONS, options);
+    this.options = merge({}, DEFAULT_SCENE_OPTIONS, options);
 
     this._state = SCENE_STATE_BEFORE;
     this._progress = 0;
@@ -56,13 +67,23 @@ class Scene {
 
     this.validate = {
       duration(val) {
-        if (_.isString(val) && val.match(/^(\.|\d)*\d+%$/)) {
+        if (isString(val) && val.match(/^(\.|\d)*\d+(%|vh|vw)$/)) {
           // percentage value
           const perc = parseFloat(val) / 100;
-          val = () =>
-            this._controller ? this._controller.info('size') * perc : 0;
+          const matches = val.match(/^(\.|\d)*\d+(%|vh|vw)$/);
+          val = () => {
+            const size =
+              matches[2] === 'vh'
+                ? window.innerHeight
+                : matches[2] === 'vw'
+                ? window.innerWidth
+                : this._controller
+                ? this._controller.info('size')
+                : 0;
+            return size * perc;
+          };
         }
-        if (_.isFunction(val)) {
+        if (isFunction(val)) {
           // function
           this._durationUpdateMethod = val;
           try {
@@ -73,7 +94,7 @@ class Scene {
         }
         // val has to be float
         val = parseFloat(val);
-        if (!_.isNumber(val) || val < 0) {
+        if (!isNumber(val) || val < 0) {
           if (this._durationUpdateMethod) {
             this._durationUpdateMethod = null;
             throw Error(
@@ -86,11 +107,11 @@ class Scene {
         return val;
       },
       offset(val) {
-        if (_.isFunction(val)) {
+        if (isFunction(val)) {
           val = val();
         }
         val = parseFloat(val);
-        if (!_.isNumber(val)) {
+        if (!isNumber(val)) {
           throw Error(`Invalid value for option "offset": ${val}`);
         }
         return val;
@@ -98,7 +119,7 @@ class Scene {
       triggerElement(val) {
         val = val || undefined;
         if (val) {
-          const el = _.isString(val) ? Util.elements(val)[0] : val;
+          const el = isString(val) ? Util.elements(val)[0] : val;
           if (el !== undefined && el.parentNode) {
             val = el;
           } else {
@@ -111,7 +132,7 @@ class Scene {
       },
       triggerHook(val) {
         const translate = { onCenter: 0.5, onEnter: 1, onLeave: 0 };
-        if (_.isNumber(val)) {
+        if (isNumber(val)) {
           val = Math.max(0, Math.min(parseFloat(val), 1)); //  make sure its betweeen 0 and 1
         } else if (val in translate) {
           val = translate[val];
@@ -125,7 +146,7 @@ class Scene {
       },
       loglevel(val) {
         val = parseInt(val, 10);
-        if (!_.isNumber(val) || val < 0 || val > 3) {
+        if (!isNumber(val) || val < 0 || val > 3) {
           throw Error(`Invalid value for option "loglevel": ${val}`);
         }
         return val;
@@ -200,7 +221,7 @@ class Scene {
   }
 
   on(names, callback) {
-    if (_.isFunction(callback)) {
+    if (isFunction(callback)) {
       names = names.trim().split(' ');
       names.forEach(fullname => {
         const nameparts = fullname.split('.');
@@ -448,7 +469,7 @@ class Scene {
   }
 
   _updateScrollOffset() {
-    const offset = _.isFunction(this.options.offset)
+    const offset = isFunction(this.options.offset)
       ? this.options.offset()
       : this.options.offset;
     this._scrollOffset = { start: this._triggerPos + offset };
@@ -544,8 +565,8 @@ class Scene {
         } catch (event) {
           // validation failed -> reset to default
           value = DEFAULT_SCENE_OPTIONS[optionName];
-          const logMSG = _.isString(event) ? [event] : event;
-          if (_.isArray(logMSG)) {
+          const logMSG = isString(event) ? [event] : event;
+          if (isArray(logMSG)) {
             logMSG[0] = `ERROR: ${logMSG[0]}`;
             logMSG.unshift(1); // loglevel 1 for error msg
             Log.log.apply(this, logMSG);
@@ -615,7 +636,7 @@ class Scene {
 
   triggerPosition() {
     // the offset is the basis
-    let offset = _.isFunction(this.options.offset)
+    let offset = isFunction(this.options.offset)
       ? this.options.offset()
       : this.options.offset;
     if (this._controller) {
@@ -820,7 +841,7 @@ class Scene {
       spacerClass: 'scrollwizardry-pin-spacer',
     };
 
-    settings = _.merge({}, defaultSettings, settings);
+    settings = merge({}, defaultSettings, settings);
 
     // validate element
     element = Util.elements(element)[0];
@@ -866,11 +887,8 @@ class Scene {
     this._pin.parentNode.style.display = 'none'; // hack start to force css to return stylesheet values instead of calculated px values.
 
     const inFlow = Util.css(this._pin).position !== 'absolute';
-    const pinCSS = _.pick(
-      Util.css(this._pin),
-      boundsParams.concat(['display'])
-    );
-    const sizeCSS = _.pick(Util.css(this._pin), ['width', 'height']);
+    const pinCSS = pick(Util.css(this._pin), boundsParams.concat(['display']));
+    const sizeCSS = pick(Util.css(this._pin), ['width', 'height']);
 
     this._pin.parentNode.style.display = parentDisplay; // hack end.
 
@@ -899,7 +917,7 @@ class Scene {
       document.createElement('div'),
       this._pin
     );
-    const spacerCSS = _.merge(pinCSS, {
+    const spacerCSS = merge(pinCSS, {
       position: inFlow ? 'relative' : 'absolute',
       boxSizing: 'content-box',
       mozBoxSizing: 'content-box',
@@ -908,7 +926,7 @@ class Scene {
 
     if (!inFlow) {
       // copy size if positioned absolutely, to work for bottom/right positioned elements.
-      _.merge(spacerCSS, sizeCSS);
+      merge(spacerCSS, sizeCSS);
     }
 
     Util.css(spacer, spacerCSS);
@@ -1078,7 +1096,7 @@ class Scene {
 
   setClassToggle(element, classes) {
     const els = Util.elements(element);
-    if (els.length === 0 || !_.isString(classes)) {
+    if (els.length === 0 || !isString(classes)) {
       Log.log(
         1,
         `ERROR calling method 'setClassToggle()': Invalid ${

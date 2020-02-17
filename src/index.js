@@ -1,5 +1,3 @@
-/* eslint-env browser */
-
 import Controller from './Controller';
 import Scene from './Scene';
 
