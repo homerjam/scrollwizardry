@@ -557,7 +557,7 @@ class Scene {
             );
           }
         } finally {
-          // this.options[optionName] = value;
+          this.options[optionName] = value;
         }
       }
     });
